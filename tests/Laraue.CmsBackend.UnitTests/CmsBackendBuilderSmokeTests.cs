@@ -2,7 +2,7 @@
 
 namespace Laraue.CmsBackend.UnitTests;
 
-public class CmsBackendBuilderTests
+public class CmsBackendBuilderSmokeTests
 {
     [Fact]
     public void Smoke_ShouldBePassed_Always()
@@ -23,7 +23,10 @@ The library is easy to use in CSharp with or without database.
             .AddContent(testMarkdown, new DateTime(2020, 01, 01))
             .Build();
 
-        var article = cmsBackend.GetEntity(new MdFileKey { Id = "introduction", ContentType = "article" });
+        var article = cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Key = new MdFileKey { Id = "introduction", ContentType = "article" }
+        });
         
         Assert.NotNull(article);
     }

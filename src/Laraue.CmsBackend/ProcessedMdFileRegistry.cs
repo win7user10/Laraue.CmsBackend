@@ -15,4 +15,9 @@ public class ProcessedMdFileRegistry
     {
         return _processedMdFiles.TryGetValue(key, out mdFile);
     }
+
+    public IEnumerable<ProcessedMdFile> GetEntities()
+    {
+        return _processedMdFiles.Values;
+    }
 }
