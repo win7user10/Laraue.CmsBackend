@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Laraue.CmsBackend", "src\Laraue.CmsBackend\Laraue.CmsBackend.csproj", "{32B3D64F-25CE-4E6D-912D-936879B34D80}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{495E991F-09B3-4355-A41F-5BFF28B51289}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F5F2470C-467F-4E78-BDCE-5B94E505D04A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Laraue.CmsBackend.UnitTests", "tests\Laraue.CmsBackend.UnitTests\Laraue.CmsBackend.UnitTests.csproj", "{32E69C29-55B7-4A35-98A2-B844B9ED48D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{32B3D64F-25CE-4E6D-912D-936879B34D80}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32B3D64F-25CE-4E6D-912D-936879B34D80}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32B3D64F-25CE-4E6D-912D-936879B34D80}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32B3D64F-25CE-4E6D-912D-936879B34D80}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{32B3D64F-25CE-4E6D-912D-936879B34D80} = {495E991F-09B3-4355-A41F-5BFF28B51289}
+		{32E69C29-55B7-4A35-98A2-B844B9ED48D9} = {F5F2470C-467F-4E78-BDCE-5B94E505D04A}
+	EndGlobalSection
+EndGlobal
