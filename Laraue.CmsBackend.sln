@@ -8,8 +8,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F5F2470C
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Laraue.CmsBackend.UnitTests", "tests\Laraue.CmsBackend.UnitTests\Laraue.CmsBackend.UnitTests.csproj", "{32E69C29-55B7-4A35-98A2-B844B9ED48D9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Laraue.Apps.LaraueDocsApi", "Laraue.Apps.LaraueDocsApi\Laraue.Apps.LaraueDocsApi.csproj", "{AE79D91D-ADEB-4B39-88D8-F994705C381C}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,14 +22,9 @@ Global
 		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{32E69C29-55B7-4A35-98A2-B844B9ED48D9}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AE79D91D-ADEB-4B39-88D8-F994705C381C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AE79D91D-ADEB-4B39-88D8-F994705C381C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AE79D91D-ADEB-4B39-88D8-F994705C381C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AE79D91D-ADEB-4B39-88D8-F994705C381C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{32B3D64F-25CE-4E6D-912D-936879B34D80} = {495E991F-09B3-4355-A41F-5BFF28B51289}
 		{32E69C29-55B7-4A35-98A2-B844B9ED48D9} = {F5F2470C-467F-4E78-BDCE-5B94E505D04A}
-		{AE79D91D-ADEB-4B39-88D8-F994705C381C} = {495E991F-09B3-4355-A41F-5BFF28B51289}
 	EndGlobalSection
 EndGlobal
