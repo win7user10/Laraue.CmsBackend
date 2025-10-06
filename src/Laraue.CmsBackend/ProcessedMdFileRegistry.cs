@@ -8,7 +8,13 @@ public class ProcessedMdFileRegistry
 
     public bool TryAdd(ProcessedMdFile mdFile)
     {
-        return _processedMdFiles.TryAdd(new MdFileKey { Id = mdFile.Id, ContentType = mdFile.ContentType }, mdFile);
+        return _processedMdFiles.TryAdd(
+            new MdFileKey
+            {
+                Id = (string)mdFile["id"],
+                ContentType = (string)mdFile["contentType"]
+            },
+            mdFile);
     }
 
     public bool TryGet(MdFileKey key, [NotNullWhen(true)] out ProcessedMdFile? mdFile)

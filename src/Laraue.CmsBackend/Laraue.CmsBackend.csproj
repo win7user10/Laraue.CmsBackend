@@ -4,9 +4,13 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Description>The package to build api for the listed locally markdown files.</Description>
+        <RepositoryType>git</RepositoryType>
+        <Authors>Belyanskiy Ilya</Authors>
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Laraue.Core.DataAccess" Version="9.1.0" />
       <PackageReference Include="Laraue.Core.Exceptions" Version="9.0.2" />
     </ItemGroup>
 

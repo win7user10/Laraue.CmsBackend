@@ -61,14 +61,20 @@ public class MarkdownProcessor : IMarkdownProcessor
                 processedFileProperties.Add(new ProcessedMdFileProperty { Name = property.Name, Value = value });
             }
 
-            result.TryAdd(new ProcessedMdFile
+            var processedFile = new ProcessedMdFile(new Dictionary<string, object>()
             {
-                ContentType = mdFile.ContentType,
-                Id = mdFile.Id,
-                Properties = processedFileProperties.ToArray(),
-                UpdatedAt = mdFile.UpdatedAt,
-                Content = mdFile.Content,
+                ["contentType"] = mdFile.ContentType,
+                ["id"] = mdFile.Id,
+                ["updatedAt"] = mdFile.UpdatedAt,
+                ["content"] = mdFile.Content,
             });
+
+            foreach (var property in processedFileProperties)
+            {
+                processedFile.Add(property.Name, property.Value);
+            }
+
+            result.TryAdd(processedFile);
         }
 
         return new ApplyResult
@@ -127,13 +133,10 @@ public sealed record ValidationError
     public required int LineNumber { get; set; }
 }
 
-public sealed record ProcessedMdFile
+public sealed class ProcessedMdFile : Dictionary<string, object>
 {
-    public required string Id { get; init; }
-    public required string Content { get; init; }
-    public required string ContentType { get; init; }
-    public required DateTime UpdatedAt { get; init; }
-    public required ProcessedMdFileProperty[] Properties { get; init; }
+    public ProcessedMdFile(Dictionary<string, object> properties) : base(properties)
+    {}
 }
 
 public sealed record ProcessedMdFileProperty

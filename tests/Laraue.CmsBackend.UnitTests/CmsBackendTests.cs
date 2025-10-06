@@ -1,4 +1,5 @@
-﻿using Laraue.Core.Exceptions.Web;
+﻿using Laraue.Core.DataAccess.Contracts;
+using Laraue.Core.Exceptions.Web;
 
 namespace Laraue.CmsBackend.UnitTests;
 
@@ -10,21 +11,22 @@ public class CmsBackendTests
     {
         var files = new ProcessedMdFileRegistry();
 
-        files.TryAdd(new ProcessedMdFile
-        {
-            ContentType = "article",
-            Content = "hi",
-            Id = "introduction",
-            UpdatedAt = new DateTime(2020, 01, 01),
-            Properties =
-            [
-                new ProcessedMdFileProperty()
-                {
-                    Name = "project",
-                    Value = "project1",
-                }
-            ]
-        });
+        files.TryAdd(new ProcessedMdFile(new Dictionary<string, object>{
+            ["contentType"] = "article",
+            ["content"] = "hi",
+            ["id"] = "introduction",
+            ["updatedAt"] = new DateTime(2020, 01, 01),
+            ["project"] = "project1",
+        }));
+        
+        
+        files.TryAdd(new ProcessedMdFile(new Dictionary<string, object>{
+            ["contentType"] = "article",
+            ["content"] = "bye",
+            ["id"] = "parting",
+            ["updatedAt"] = new DateTime(2020, 01, 02),
+            ["project"] = "project2",
+        }));
         
         _cmsBackend = new CmsBackend(files);
     }
@@ -50,5 +52,67 @@ public class CmsBackendTests
         var property = Assert.Single(result);
         Assert.Equal("project1", property.Value);
         Assert.Equal("project", property.Key);
+    }
+    
+    [Fact]
+    public void GetEntities_ShouldReturnsOnlyRequestedField_WhenRequestHasListOfRequiredProperties()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Properties = ["project"],
+            Pagination = GetDefaultPagination()
+        });
+        
+        Assert.Equal(2, result.Data.Count);
+        
+        var property = Assert.Single(result.Data[0]);
+        Assert.Equal("project1", property.Value);
+        Assert.Equal("project", property.Key);
+    }
+    
+    [Fact]
+    public void GetEntities_ShouldReturnsOnlyFilteredEntities_WhenFilterIsPassed()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow { Property = "id", Value = "introduction", Operator = FilterOperator.Equals }
+            ],
+            Pagination = GetDefaultPagination()
+        });
+        
+        Assert.Single(result.Data);
+    }
+    
+    [Theory]
+    [InlineData(SortOrder.Ascending, 2)]
+    [InlineData(SortOrder.Descending, 1)]
+    public void GetEntities_ShouldBeSorted_WhenSortingIsPassed(SortOrder sortOrder, int exceptedSecondEntityDay)
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Sorting = 
+            [
+                new SortRow { Property = "updatedAt", SortOrder = sortOrder }
+            ],
+            Pagination = new PaginationData { Page = 1, PerPage = 1 }
+        });
+
+        var creationDate = result
+            .Data
+            .Select(i => (DateTime)i["updatedAt"])
+            .Single();
+        
+        Assert.Equal(new DateTime(2020, 01, exceptedSecondEntityDay), creationDate);
+    }
+
+    private static PaginationData GetDefaultPagination()
+    {
+        return new PaginationData
+        {
+            Page = 0,
+            PerPage = 10,
+        };
     }
 }
