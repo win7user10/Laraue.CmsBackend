@@ -1,4 +1,5 @@
-﻿using Laraue.CmsBackend.UnitTests.types;
+﻿using Laraue.CmsBackend.Extensions;
+using Laraue.CmsBackend.UnitTests.types;
 
 namespace Laraue.CmsBackend.UnitTests;
 
@@ -7,20 +8,9 @@ public class CmsBackendBuilderSmokeTests
     [Fact]
     public void Smoke_ShouldBePassed_Always()
     {
-        var testMarkdown = @"---
-id: introduction
-type: article
-name: The new library presentation
----
-
-## How to use that?
-
-The library is easy to use in CSharp with or without database.
-";
-        
         var cmsBackend = new CmsBackendBuilder(new MarkdownParser(), new MarkdownProcessor())
             .AddContentType<Article>()
-            .AddContent(testMarkdown, new DateTime(2020, 01, 01))
+            .AddContentFolder("articles")
             .Build();
 
         var article = cmsBackend.GetEntity(new GetEntityRequest
@@ -29,5 +19,8 @@ The library is easy to use in CSharp with or without database.
         });
         
         Assert.NotNull(article);
+        
+        var tags = Assert.IsType<object[]>(article["tags"]);
+        Assert.Equal(2, tags.Length);
     }
 }

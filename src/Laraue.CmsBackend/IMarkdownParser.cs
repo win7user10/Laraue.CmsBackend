@@ -5,17 +5,17 @@ namespace Laraue.CmsBackend;
 
 public interface IMarkdownParser
 {
-    ParsedMdFile Parse(string markdown, DateTime updateAt);
+    ParsedMdFile Parse(string markdown, string path, string id, DateTime updateAt);
 }
 
 public class MarkdownParser : IMarkdownParser
 {
-    public ParsedMdFile Parse(string markdown, DateTime updateAt)
+    public ParsedMdFile Parse(string markdown, string path, string id, DateTime updateAt)
     {
-        return new InternalParser(markdown, updateAt).Parse();
+        return new InternalParser(markdown, path, id, updateAt).Parse();
     }
     
-    private class InternalParser(string markdown, DateTime updateAt)
+    private class InternalParser(string markdown, string path, string id, DateTime updateAt)
     {
         private readonly StringReader _stringReader = new (markdown);
         private int _lineNumber;
@@ -49,7 +49,6 @@ public class MarkdownParser : IMarkdownParser
             // Read text
             var content = GetRemainedString();
 
-            var id = PopPropertyValueOrThrow("id");
             var contentType = PopPropertyValueOrThrow("type");
         
             return new ParsedMdFile
@@ -59,6 +58,7 @@ public class MarkdownParser : IMarkdownParser
                 Content = content,
                 UpdatedAt = updateAt,
                 Properties = properties.Values,
+                Path = path,
             };
 
             string PopPropertyValueOrThrow(string key)
@@ -117,6 +117,7 @@ public sealed record ParsedMdFile
     public required string Content { get; init; }
     public required DateTime UpdatedAt { get; init; }
     public required ICollection<ParsedMdFileProperty> Properties { get; init; }
+    public required string Path { get; init; }
 }
 
 public sealed record ParsedMdFileProperty

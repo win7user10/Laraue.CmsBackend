@@ -51,22 +51,25 @@ public class MarkdownProcessor : IMarkdownProcessor
                     continue;
                 }
 
-                var value = Parse(mdFileProperty.Value, property.Type);
+                var isArray = property is ArrayTypeProperty;
+                var value = Parse(mdFileProperty.Value, property.Type, isArray);
                 if (value == null)
                 {
-                    errors.Add(mdFile, $"Invalid case of property '{property.Name}' with value '{mdFileProperty.Value}' to type '{property.Type}'", mdFileProperty.SourceLineNumber);
+                    var arrayString = isArray ? "[]" : string.Empty;
+                    errors.Add(mdFile, $"Invalid cast of property '{property.Name}' with value '{mdFileProperty.Value}' to type '{property.Type}{arrayString}'", mdFileProperty.SourceLineNumber);
                     continue;
                 }
                 
                 processedFileProperties.Add(new ProcessedMdFileProperty { Name = property.Name, Value = value });
             }
 
-            var processedFile = new ProcessedMdFile(new Dictionary<string, object>()
+            var processedFile = new ProcessedMdFile(new Dictionary<string, object>
             {
                 ["contentType"] = mdFile.ContentType,
                 ["id"] = mdFile.Id,
                 ["updatedAt"] = mdFile.UpdatedAt,
                 ["content"] = mdFile.Content,
+                ["path"] = mdFile.Path,
             });
 
             foreach (var property in processedFileProperties)
@@ -86,8 +89,21 @@ public class MarkdownProcessor : IMarkdownProcessor
 
     private static object? Parse(
         string value,
-        ContentTypePropertyType type)
+        ContentTypePropertyType type,
+        bool isArray)
     {
+        if (isArray)
+        {
+            if (!value.StartsWith('[') || !value.EndsWith(']'))
+            {
+                return null;
+            }
+            
+            var arrayParts = value[1..^1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
+            var result = arrayParts.Select(part => Parse(part, type, false)).ToArray();
+            return result.Any(i => i == null) ? null : result;
+        }
+        
         switch (type)
         {
             case ContentTypePropertyType.String:

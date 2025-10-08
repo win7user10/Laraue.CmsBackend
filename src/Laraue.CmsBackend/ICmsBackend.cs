@@ -1,4 +1,5 @@
-﻿using Laraue.Core.DataAccess.Contracts;
+﻿using System.Text.Json.Serialization;
+using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.DataAccess.Extensions;
 using Laraue.Core.Exceptions.Web;
 
@@ -8,6 +9,7 @@ public interface ICmsBackend
 {
     Dictionary<string, object> GetEntity(GetEntityRequest request);
     IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request);
+    List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request);
 }
 
 public class GetEntityRequest
@@ -24,9 +26,23 @@ public class GetEntitiesRequest : IPaginatedRequest
     public required PaginationData Pagination { get; init; }
 }
 
+public class CountPropertyValuesRequest
+{
+    public required string Property { get; init; }
+    public FilterRow[]? Filters { get; init; }
+}
+
+public class CountPropertyRow
+{
+    public required object Key { get; init; }
+    public required int Count { get; init; }
+}
+
 public class FilterRow
 {
     public required string Property { get; set; }
+    
+    [JsonConverter(typeof(ObjectConverter))]
     public required object Value { get; set; }
     public required FilterOperator Operator { get; set; }
 }
@@ -62,11 +78,38 @@ public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
         var source = registry.GetEntities();
         var filteredSource = ApplyFilters(source, request.Filters);
         var orderedSource = ApplySort(filteredSource, request.Sorting);
-        var projectedSource = orderedSource.Select(x => MapMdFileToDto(x, request.Properties));
+        var projectedSource = ApplyMap(orderedSource, request.Properties);
         
         return projectedSource.ShortPaginate(request);
     }
-    
+
+    public List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request)
+    {
+        var source = registry.GetEntities();
+        var filteredSource = ApplyFilters(source, request.Filters);
+        var projectedSource = ApplyMap(filteredSource, [request.Property]);
+
+        var flatSource = projectedSource
+            .SelectMany(x =>
+            {
+                if (!x.TryGetValue(request.Property, out var value))
+                {
+                    return [];
+                }
+                
+                return value as object[] ?? [value];
+            });
+        
+        return flatSource
+            .GroupBy(x => x)
+            .Select(x => new CountPropertyRow
+            {
+                Count = x.Count(),
+                Key = x.Key
+            })
+            .ToList();
+    }
+
     private IEnumerable<ProcessedMdFile> ApplyFilters(
         IEnumerable<ProcessedMdFile> source,
         FilterRow[]? filters)
@@ -130,15 +173,25 @@ public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
 
         return filter.Operator switch
         {
-            FilterOperator.Equals => value == filter.Value,
+            FilterOperator.Equals => filter.Value.Equals(value),
             _ => throw new NotImplementedException()
         };
     }
-
-    private Dictionary<string, object> MapMdFileToDto(ProcessedMdFile mdFile, string[]? includeProperties)
+    
+    private IEnumerable<Dictionary<string, object>> ApplyMap(IEnumerable<ProcessedMdFile> mdFiles, string[]? includeProperties)
     {
-        return includeProperties is null
-            ? mdFile
-            : includeProperties.ToDictionary(property => property, property => mdFile[property]);
+        return mdFiles.Select(x => MapMdFileToDto(x, includeProperties));
+    }
+
+    private static Dictionary<string, object> MapMdFileToDto(ProcessedMdFile mdFile, string[]? includeProperties)
+    {
+        if (includeProperties is null)
+        {
+            return mdFile;
+        }
+        
+        return includeProperties
+            .Where(mdFile.ContainsKey)
+            .ToDictionary(propertyName => propertyName, propertyName => mdFile[propertyName]);
     }
 }

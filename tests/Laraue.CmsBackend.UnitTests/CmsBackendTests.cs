@@ -17,6 +17,7 @@ public class CmsBackendTests
             ["id"] = "introduction",
             ["updatedAt"] = new DateTime(2020, 01, 01),
             ["project"] = "project1",
+            ["tags"] = new [] { "tag1", "tag2" },
         }));
         
         
@@ -26,6 +27,7 @@ public class CmsBackendTests
             ["id"] = "parting",
             ["updatedAt"] = new DateTime(2020, 01, 02),
             ["project"] = "project2",
+            ["tags"] = new [] { "tag2", "tag3" },
         }));
         
         _cmsBackend = new CmsBackend(files);
@@ -105,6 +107,22 @@ public class CmsBackendTests
             .Single();
         
         Assert.Equal(new DateTime(2020, 01, exceptedSecondEntityDay), creationDate);
+    }
+    
+    [Fact]
+    public void CountPropertyValues_ShouldReturnsCount_OnArrayValues()
+    {
+        var result = _cmsBackend.CountPropertyValues(new CountPropertyValuesRequest
+        {
+            Property = "tags"
+        });
+        
+        Assert.Equal(3, result.Count);
+
+        var resultDictionary = result.ToDictionary(x => x.Key, x => x.Count);
+        Assert.Equal(1, resultDictionary["tag1"]);
+        Assert.Equal(2, resultDictionary["tag2"]);
+        Assert.Equal(1, resultDictionary["tag3"]);
     }
 
     private static PaginationData GetDefaultPagination()

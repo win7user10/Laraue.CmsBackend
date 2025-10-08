@@ -4,9 +4,9 @@ namespace Laraue.CmsBackend;
 
 public class ContentTypeRegistry
 {
-    private readonly Dictionary<string, ContentType> _contentTypes = new ();
+    private readonly Dictionary<string, DocumentType> _contentTypes = new ();
     
-    public ContentTypeRegistry AddContentType<TContentType>() where TContentType : ContentType
+    public ContentTypeRegistry AddContentType<TContentType>() where TContentType : DocumentType
     {
         var contentType = Activator.CreateInstance<TContentType>();
 
@@ -18,7 +18,7 @@ public class ContentTypeRegistry
         return this;
     }
 
-    public bool TryGetContentType(string id, [NotNullWhen(true)] out ContentType? contentType)
+    public bool TryGetContentType(string id, [NotNullWhen(true)] out DocumentType? contentType)
     {
         return _contentTypes.TryGetValue(id, out contentType);
     } 

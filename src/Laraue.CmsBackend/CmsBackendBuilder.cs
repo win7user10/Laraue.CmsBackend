@@ -4,8 +4,8 @@ namespace Laraue.CmsBackend;
 
 public interface ICmsBackendBuilder
 {
-    ICmsBackendBuilder AddContent(string markdownFileContent, DateTime updateAt);
-    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : ContentType;
+    ICmsBackendBuilder AddContent(string markdownFileContent, string path, string id, DateTime updateAt);
+    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : DocumentType;
     ICmsBackend Build();
 }
 
@@ -15,16 +15,16 @@ public class CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcesso
     private readonly ContentTypeRegistry _contentTypeRegistry = new();
     private readonly ParsedMdFileRegistry _parsedMdFileRegistry = new();
     
-    public ICmsBackendBuilder AddContent(string markdownFileContent, DateTime updateAt)
+    public ICmsBackendBuilder AddContent(string markdownFileContent, string path, string id, DateTime updateAt)
     {
-        var result = markdownParser.Parse(markdownFileContent, updateAt);
-            
+        var result = markdownParser.Parse(markdownFileContent, path, id, updateAt);
+        
         _parsedMdFileRegistry.Add(result);
         
         return this;
     }
 
-    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : ContentType
+    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : DocumentType
     {
         _contentTypeRegistry.AddContentType<TContentType>();
         
@@ -65,10 +65,13 @@ public class CmsBackendException : Exception
         foreach (var exceptionByEntity in exceptions)
         {
             sb.AppendLine()
-                .Append("Entity '")
-                .Append(exceptionByEntity.Key.ContentType)
-                .Append(':')
+                .Append("Entity ")
+                .Append("path: '")
+                .Append(exceptionByEntity.Key.Path)
+                .Append("' id: '")
                 .Append(exceptionByEntity.Key.Id)
+                .Append("' type '")
+                .Append(exceptionByEntity.Key.ContentType)
                 .Append('\'')
                 .AppendLine();
 
