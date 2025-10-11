@@ -1,10 +1,11 @@
 ﻿using System.Text;
+using Laraue.CmsBackend.Contracts;
 
 namespace Laraue.CmsBackend;
 
 public interface ICmsBackendBuilder
 {
-    ICmsBackendBuilder AddContent(string markdownFileContent, string path, string id, DateTime updateAt);
+    ICmsBackendBuilder AddContent(ContentProperties properties);
     ICmsBackendBuilder AddContentType<TContentType>() where TContentType : DocumentType;
     ICmsBackend Build();
 }
@@ -15,9 +16,9 @@ public class CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcesso
     private readonly ContentTypeRegistry _contentTypeRegistry = new();
     private readonly ParsedMdFileRegistry _parsedMdFileRegistry = new();
     
-    public ICmsBackendBuilder AddContent(string markdownFileContent, string path, string id, DateTime updateAt)
+    public ICmsBackendBuilder AddContent(ContentProperties properties)
     {
-        var result = markdownParser.Parse(markdownFileContent, path, id, updateAt);
+        var result = markdownParser.Parse(properties);
         
         _parsedMdFileRegistry.Add(result);
         

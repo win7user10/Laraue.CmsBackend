@@ -1,4 +1,6 @@
-﻿namespace Laraue.CmsBackend;
+﻿using Laraue.CmsBackend.Contracts;
+
+namespace Laraue.CmsBackend;
 
 public class ParsedMdFileRegistry
 {

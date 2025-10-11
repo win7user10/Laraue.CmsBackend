@@ -1,4 +1,6 @@
-﻿namespace Laraue.CmsBackend.Extensions;
+﻿using Laraue.CmsBackend.Contracts;
+
+namespace Laraue.CmsBackend.Extensions;
 
 public static class CmsBackendBuilderExtensions
 {
@@ -17,10 +19,17 @@ public static class CmsBackendBuilderExtensions
             
             var fileContent = File.ReadAllText(filePath);
             var modifiedAt = File.GetLastWriteTimeUtc(filePath);
+            var createdAt = File.GetCreationTimeUtc(filePath);
             
             try
             {
-                builder.AddContent(fileContent, directoryName!, fileName, modifiedAt);
+                builder.AddContent(
+                    new ContentProperties(
+                        fileContent,
+                        directoryName!,
+                        fileName,
+                        createdAt,
+                        modifiedAt));
             }
             catch (MarkdownParserException e)
             {

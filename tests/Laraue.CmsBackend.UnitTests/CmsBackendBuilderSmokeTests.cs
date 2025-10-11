@@ -1,4 +1,5 @@
 ﻿using Laraue.CmsBackend.Extensions;
+using Laraue.CmsBackend.MarkdownTransformation;
 using Laraue.CmsBackend.UnitTests.types;
 
 namespace Laraue.CmsBackend.UnitTests;
@@ -8,7 +9,11 @@ public class CmsBackendBuilderSmokeTests
     [Fact]
     public void Smoke_ShouldBePassed_Always()
     {
-        var cmsBackend = new CmsBackendBuilder(new MarkdownParser(), new MarkdownProcessor())
+        var cmsBackend = new CmsBackendBuilder(
+                new MarkdownParser(
+                    new MarkdownToHtmlTransformer(),
+                    new ArticleInnerLinksGenerator()),
+                new MarkdownProcessor())
             .AddContentType<Article>()
             .AddContentFolder("articles")
             .Build();

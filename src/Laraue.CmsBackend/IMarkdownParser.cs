@@ -1,23 +1,31 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
+using Laraue.CmsBackend.Contracts;
+using Laraue.CmsBackend.MarkdownTransformation;
 
 namespace Laraue.CmsBackend;
 
 public interface IMarkdownParser
 {
-    ParsedMdFile Parse(string markdown, string path, string id, DateTime updateAt);
+    ParsedMdFile Parse(ContentProperties properties);
 }
 
-public class MarkdownParser : IMarkdownParser
+public class MarkdownParser(
+    ITransformer? markdownContentTransformer,
+    IArticleInnerLinksGenerator articleInnerLinksGenerator)
+    : IMarkdownParser
 {
-    public ParsedMdFile Parse(string markdown, string path, string id, DateTime updateAt)
+    public ParsedMdFile Parse(ContentProperties properties)
     {
-        return new InternalParser(markdown, path, id, updateAt).Parse();
+        return new InternalParser(markdownContentTransformer, articleInnerLinksGenerator, properties).Parse();
     }
     
-    private class InternalParser(string markdown, string path, string id, DateTime updateAt)
+    private class InternalParser(
+        ITransformer? markdownContentTransformer,
+        IArticleInnerLinksGenerator articleInnerLinksGenerator,
+        ContentProperties contentProperties)
     {
-        private readonly StringReader _stringReader = new (markdown);
+        private readonly StringReader _stringReader = new (contentProperties.Markdown);
         private int _lineNumber;
         
         public ParsedMdFile Parse()
@@ -48,17 +56,25 @@ public class MarkdownParser : IMarkdownParser
         
             // Read text
             var content = GetRemainedString();
+            var links = articleInnerLinksGenerator.ParseLinks(content);
+            
+            if (markdownContentTransformer is not null)
+            {
+                content = markdownContentTransformer.Transform(content);
+            }
 
             var contentType = PopPropertyValueOrThrow("type");
         
             return new ParsedMdFile
             {
-                Id = id,
+                Id = contentProperties.Id,
                 ContentType = contentType,
                 Content = content,
-                UpdatedAt = updateAt,
+                UpdatedAt = contentProperties.UpdatedAt,
+                CreatedAt = contentProperties.CreatedAt,
                 Properties = properties.Values,
-                Path = path,
+                Path = contentProperties.Path,
+                InnerLinks = links,
             };
 
             string PopPropertyValueOrThrow(string key)
@@ -108,21 +124,4 @@ public class MarkdownParser : IMarkdownParser
             return _stringReader.ReadToEnd();
         }
     }
-}
-
-public sealed record ParsedMdFile
-{
-    public required string Id { get; init; }
-    public required string ContentType { get; init; }
-    public required string Content { get; init; }
-    public required DateTime UpdatedAt { get; init; }
-    public required ICollection<ParsedMdFileProperty> Properties { get; init; }
-    public required string Path { get; init; }
-}
-
-public sealed record ParsedMdFileProperty
-{
-    public required string Name { get; init; }
-    public required string Value { get; init; }
-    public int SourceLineNumber { get; init; }
 }

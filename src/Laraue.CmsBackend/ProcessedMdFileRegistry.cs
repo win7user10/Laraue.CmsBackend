@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics.CodeAnalysis;
+using Laraue.CmsBackend.Contracts;
 
 namespace Laraue.CmsBackend;
 

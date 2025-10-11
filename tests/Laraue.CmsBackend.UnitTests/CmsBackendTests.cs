@@ -1,4 +1,5 @@
-﻿using Laraue.Core.DataAccess.Contracts;
+﻿using Laraue.CmsBackend.Contracts;
+using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.Exceptions.Web;
 
 namespace Laraue.CmsBackend.UnitTests;

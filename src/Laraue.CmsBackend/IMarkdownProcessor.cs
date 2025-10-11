@@ -1,4 +1,6 @@
-﻿namespace Laraue.CmsBackend;
+﻿using Laraue.CmsBackend.Contracts;
+
+namespace Laraue.CmsBackend;
 
 public interface IMarkdownProcessor
 {
@@ -63,14 +65,7 @@ public class MarkdownProcessor : IMarkdownProcessor
                 processedFileProperties.Add(new ProcessedMdFileProperty { Name = property.Name, Value = value });
             }
 
-            var processedFile = new ProcessedMdFile(new Dictionary<string, object>
-            {
-                ["contentType"] = mdFile.ContentType,
-                ["id"] = mdFile.Id,
-                ["updatedAt"] = mdFile.UpdatedAt,
-                ["content"] = mdFile.Content,
-                ["path"] = mdFile.Path,
-            });
+            var processedFile = new ProcessedMdFile(mdFile);
 
             foreach (var property in processedFileProperties)
             {
@@ -147,12 +142,6 @@ public sealed record ValidationError
 {
     public required string Text { get; set; }
     public required int LineNumber { get; set; }
-}
-
-public sealed class ProcessedMdFile : Dictionary<string, object>
-{
-    public ProcessedMdFile(Dictionary<string, object> properties) : base(properties)
-    {}
 }
 
 public sealed record ProcessedMdFileProperty
