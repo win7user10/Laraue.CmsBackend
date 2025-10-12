@@ -16,6 +16,7 @@ public static class CmsBackendBuilderExtensions
         {
             var fileName = Path.GetFileNameWithoutExtension(filePath);
             var directoryName = Path.GetDirectoryName(filePath);
+            var directorySegments = directoryName!.Split(Path.DirectorySeparatorChar);
             
             var fileContent = File.ReadAllText(filePath);
             var modifiedAt = File.GetLastWriteTimeUtc(filePath);
@@ -26,7 +27,7 @@ public static class CmsBackendBuilderExtensions
                 builder.AddContent(
                     new ContentProperties(
                         fileContent,
-                        directoryName!,
+                        directorySegments,
                         fileName,
                         createdAt,
                         modifiedAt));

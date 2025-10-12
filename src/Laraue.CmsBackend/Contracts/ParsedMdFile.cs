@@ -1,6 +1,6 @@
 ﻿namespace Laraue.CmsBackend.Contracts;
 
-public sealed record ParsedMdFile
+public sealed class ParsedMdFile
 {
     public required string Id { get; init; }
     public required string ContentType { get; init; }
@@ -9,7 +9,7 @@ public sealed record ParsedMdFile
     public required DateTime UpdatedAt { get; init; }
     public required ICollection<ParsedMdFileProperty> Properties { get; init; }
     public required ICollection<ArticleInnerLink> InnerLinks { get; init; }
-    public required string Path { get; init; }
+    public required string[] Path { get; init; }
 }
 
 public sealed record ParsedMdFileProperty

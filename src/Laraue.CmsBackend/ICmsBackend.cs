@@ -11,12 +11,21 @@ public interface ICmsBackend
     Dictionary<string, object> GetEntity(GetEntityRequest request);
     IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request);
     List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request);
+    List<SectionItem> GetSections(GetSectionsRequest request);
 }
 
-public class GetEntityRequest
+public class GetSectionsRequest
 {
-    public required MdFileKey Key { get; set; }
-    public string[]? Properties { get; set; }
+    public string? FromPath { get; init; }
+    public required int Depth { get; init; }
+}
+
+public class SectionItem
+{
+    public required string RelativePath { get; init; }
+    public required string FullPath { get; init; }
+    public required SectionItem[] Children { get; init; }
+    public required bool HasContent { get; init; }
 }
 
 public class GetEntitiesRequest : IPaginatedRequest
@@ -25,6 +34,12 @@ public class GetEntitiesRequest : IPaginatedRequest
     public FilterRow[]? Filters { get; set; }
     public SortRow[]? Sorting { get; set; }
     public required PaginationData Pagination { get; init; }
+}
+
+public class GetEntityRequest
+{
+    public required MdFileKey Key { get; set; }
+    public string[]? Properties { get; set; }
 }
 
 public class CountPropertyValuesRequest
@@ -109,6 +124,24 @@ public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
                 Key = x.Key
             })
             .ToList();
+    }
+
+    public List<SectionItem> GetSections(GetSectionsRequest request)
+    {
+        var subSections = registry.GetSubSections(request.FromPath, request.Depth);
+
+        return subSections.Select(Map).ToList();
+    }
+
+    private SectionItem Map(ProcessedMdFileRegistry.SubSectionItem sectionItem)
+    {
+        return new SectionItem
+        {
+            RelativePath = sectionItem.RelativePath,
+            FullPath = sectionItem.FullPath,
+            Children = sectionItem.Children.Select(Map).ToArray(),
+            HasContent = sectionItem.HasContent,
+        };
     }
 
     private IEnumerable<ProcessedMdFile> ApplyFilters(

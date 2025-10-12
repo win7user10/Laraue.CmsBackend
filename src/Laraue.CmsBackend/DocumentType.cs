@@ -1,9 +1,10 @@
 ﻿namespace Laraue.CmsBackend;
 
-public abstract class DocumentType
+// todo - IF DOC CAN BE WITHOUT TYPE, default implementation should be used? What is default impl? It should have title?
+public class DocumentType(string id, DocumentTypeProperty[] properties)
 {
-    public abstract string Id { get; }
-    public abstract DocumentTypeProperty[] Properties { get; }
+    public string Id { get; } = id;
+    public DocumentTypeProperty[] Properties { get; } = properties;
 }
 
 public abstract class DocumentTypeProperty

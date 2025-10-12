@@ -2,7 +2,7 @@
 
 public record ContentProperties(
     string Markdown,
-    string Path,
+    string[] Path,
     string Id, 
     DateTime CreatedAt,
     DateTime UpdatedAt)
