@@ -2,14 +2,14 @@
 
 public sealed class ParsedMdFile
 {
-    public required string Id { get; init; }
+    public required string FileName { get; init; }
     public required string ContentType { get; init; }
     public required string Content { get; init; }
     public required DateTime CreatedAt { get; init; }
     public required DateTime UpdatedAt { get; init; }
     public required ICollection<ParsedMdFileProperty> Properties { get; init; }
     public required ICollection<ArticleInnerLink> InnerLinks { get; init; }
-    public required string[] Path { get; init; }
+    public required FilePath Path { get; init; }
 }
 
 public sealed record ParsedMdFileProperty

@@ -16,16 +16,8 @@ public interface ICmsBackend
 
 public class GetSectionsRequest
 {
-    public string? FromPath { get; init; }
+    public required string[] FromPath { get; init; }
     public required int Depth { get; init; }
-}
-
-public class SectionItem
-{
-    public required string RelativePath { get; init; }
-    public required string FullPath { get; init; }
-    public required SectionItem[] Children { get; init; }
-    public required bool HasContent { get; init; }
 }
 
 public class GetEntitiesRequest : IPaginatedRequest
@@ -38,7 +30,7 @@ public class GetEntitiesRequest : IPaginatedRequest
 
 public class GetEntityRequest
 {
-    public required MdFileKey Key { get; set; }
+    public required string[] Path { get; set; }
     public string[]? Properties { get; set; }
 }
 
@@ -80,11 +72,11 @@ public enum SortOrder
     Descending,
 }
 
-public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
+public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
 {
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
     {
-        return registry.TryGet(request.Key, out var value)
+        return registry.TryGet(request.Path, out var value)
             ? MapMdFileToDto(value, request.Properties)
             : throw new NotFoundException();
     }
@@ -137,10 +129,12 @@ public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
     {
         return new SectionItem
         {
-            RelativePath = sectionItem.RelativePath,
+            FileName = sectionItem.FileName,
             FullPath = sectionItem.FullPath,
+            RelativePath = sectionItem.RelativePath,
             Children = sectionItem.Children.Select(Map).ToArray(),
             HasContent = sectionItem.HasContent,
+            Title = sectionItem.Title,
         };
     }
 
@@ -207,7 +201,7 @@ public class CmsBackend(ProcessedMdFileRegistry registry) : ICmsBackend
 
         return filter.Operator switch
         {
-            FilterOperator.Equals => filter.Value.Equals(value),
+            FilterOperator.Equals => value.Equals(filter.Value),
             _ => throw new NotImplementedException()
         };
     }

@@ -45,7 +45,7 @@ public class MarkdownProcessor : IMarkdownProcessor
             {
                 if (!mdFileProperties.TryGetValue(property.Name, out var mdFileProperty))
                 {
-                    if (property.Required)
+                    if (property.IsRequired)
                     {
                         errors.Add(mdFile, $"Required property '{property.Name}' is not defined", 0);
                     }
@@ -53,11 +53,10 @@ public class MarkdownProcessor : IMarkdownProcessor
                     continue;
                 }
 
-                var isArray = property is ArrayTypeProperty;
-                var value = Parse(mdFileProperty.Value, property.Type, isArray);
+                var value = Parse(mdFileProperty.Value, property.Type, property.IsArray);
                 if (value == null)
                 {
-                    var arrayString = isArray ? "[]" : string.Empty;
+                    var arrayString = property.IsArray ? "[]" : string.Empty;
                     errors.Add(mdFile, $"Invalid cast of property '{property.Name}' with value '{mdFileProperty.Value}' to type '{property.Type}{arrayString}'", mdFileProperty.SourceLineNumber);
                     continue;
                 }
@@ -72,7 +71,10 @@ public class MarkdownProcessor : IMarkdownProcessor
                 processedFile.Add(property.Name, property.Value);
             }
 
-            result.TryAdd(processedFile);
+            if (!result.TryAdd(processedFile))
+            {
+                errors.Add(mdFile, $"The same file already has been registered '{mdFile.Path}/{mdFile.FileName}'", 0);
+            }
         }
 
         return new ApplyResult
@@ -84,7 +86,7 @@ public class MarkdownProcessor : IMarkdownProcessor
 
     private static object? Parse(
         string value,
-        ContentTypePropertyType type,
+        ContentTypeRegistry.ContentTypePropertyType type,
         bool isArray)
     {
         if (isArray)
@@ -101,13 +103,13 @@ public class MarkdownProcessor : IMarkdownProcessor
         
         switch (type)
         {
-            case ContentTypePropertyType.String:
+            case ContentTypeRegistry.ContentTypePropertyType.String:
                 return value;
-            case ContentTypePropertyType.Number:
+            case ContentTypeRegistry.ContentTypePropertyType.Number:
                 return int.TryParse(value, out var intValue) ? intValue : null;
-            case ContentTypePropertyType.DateTime:
+            case ContentTypeRegistry.ContentTypePropertyType.DateTime:
                 return DateTime.TryParse(value, out var dateTime) ? dateTime : null;
-            case ContentTypePropertyType.Float:
+            case ContentTypeRegistry.ContentTypePropertyType.Float:
                 return double.TryParse(value, out var doubleValue) ? doubleValue : null;
             default:
                 throw new InvalidOperationException();

@@ -63,11 +63,13 @@ public class MarkdownParser(
                 content = markdownContentTransformer.Transform(content);
             }
 
-            var contentType = PopPropertyValueOrThrow("type");
+            var contentType = properties.Remove("type", out var contentTypeProperty)
+                ? contentTypeProperty.Value
+                : ContentTypeRegistry.UndefinedContentType;
         
             return new ParsedMdFile
             {
-                Id = contentProperties.Id,
+                FileName = contentProperties.Id,
                 ContentType = contentType,
                 Content = content,
                 UpdatedAt = contentProperties.UpdatedAt,
@@ -84,7 +86,7 @@ public class MarkdownParser(
                     throw new MarkdownParserException($"Property '{key}' not found", _lineNumber);
                 }
 
-                return value!.Value;
+                return value.Value;
             }
         }
 

@@ -1,4 +1,6 @@
-﻿namespace Laraue.CmsBackend;
+﻿using System.Text;
+
+namespace Laraue.CmsBackend;
 
 public ref struct SpanReader(ReadOnlySpan<char> source)
 {
@@ -220,5 +222,51 @@ public ref struct SpanReader(ReadOnlySpan<char> source)
         
         c = Source[index];
         return true;
+    }
+}
+
+public static class StringExtensions
+{
+    public static StringBuilder ToKebabCase(this string source)
+    {
+        var reader = new SpanReader(source);
+        var sb = new StringBuilder();
+        
+        while (true)
+        {
+            if (!reader.TryRead(out var nextChar))
+            {
+                return sb;
+            }
+            
+            if (nextChar == ' ')
+            {
+                sb.Append('-');
+            }
+            else if (char.IsUpper(nextChar))
+            {
+                sb.Append(char.ToLower(nextChar));
+            }
+            else
+            {
+                sb.Append(nextChar);
+            }
+        }
+    }
+    
+    public static StringBuilder ToCamelCase(this string source)
+    {
+        var reader = new SpanReader(source);
+        var sb = new StringBuilder();
+
+        var firstCharProcessed = false;
+
+        while (reader.TryRead(out var nextChar))
+        {
+            sb.Append(firstCharProcessed ? nextChar : char.ToLower(nextChar));
+            firstCharProcessed = true;
+        }
+
+        return sb;
     }
 }

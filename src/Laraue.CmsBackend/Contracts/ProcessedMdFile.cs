@@ -6,7 +6,7 @@ public sealed class ProcessedMdFile : Dictionary<string, object>
         : base(new Dictionary<string, object>
         {
             ["contentType"] = mdFile.ContentType,
-            ["id"] = mdFile.Id,
+            ["fileName"] = mdFile.FileName,
             ["updatedAt"] = mdFile.UpdatedAt,
             ["createdAt"] = mdFile.CreatedAt,
             ["content"] = mdFile.Content,

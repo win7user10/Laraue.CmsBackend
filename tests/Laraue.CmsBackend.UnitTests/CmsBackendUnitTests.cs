@@ -1,37 +1,58 @@
 ﻿using Laraue.CmsBackend.Contracts;
+using Laraue.CmsBackend.MarkdownTransformation;
 using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.Exceptions.Web;
 
 namespace Laraue.CmsBackend.UnitTests;
 
-public class CmsBackendTests
+public class CmsBackendUnitTests
 {
     private readonly ICmsBackend _cmsBackend;
-    
-    public CmsBackendTests()
-    {
-        var files = new ProcessedMdFileRegistry();
 
-        files.TryAdd(new ProcessedMdFile(new Dictionary<string, object>{
-            ["contentType"] = "article",
-            ["content"] = "hi",
-            ["id"] = "introduction",
-            ["updatedAt"] = new DateTime(2020, 01, 01),
-            ["project"] = "project1",
-            ["tags"] = new [] { "tag1", "tag2" },
-        }));
+    private class UnitTestArticle : BaseDocumentType
+    {
+        public required string[] Tags { get; set; }
+        public required string Project { get; set; }
+    }
+    
+    public CmsBackendUnitTests()
+    {
+        var content1Text = @"---
+tags: [tag1, tag2]
+project: project1
+type: unitTestArticle
+---
+hi";
+        var content1 =  new ContentProperties(
+            content1Text,
+            new FilePath(["docs", "articles"]),
+            "article1",
+            new DateTime(2020, 01, 01),
+            new DateTime(2020, 01, 01));
         
+        var content2Text = @"---
+tags: [tag2, tag3]
+project: project2
+type: unitTestArticle
+---
+hi";
         
-        files.TryAdd(new ProcessedMdFile(new Dictionary<string, object>{
-            ["contentType"] = "article",
-            ["content"] = "bye",
-            ["id"] = "parting",
-            ["updatedAt"] = new DateTime(2020, 01, 02),
-            ["project"] = "project2",
-            ["tags"] = new [] { "tag2", "tag3" },
-        }));
+        var content2 = new ContentProperties(
+            content2Text,
+            new FilePath(["docs", "articles"]),
+            "article2",
+            new DateTime(2020, 01, 01),
+            new DateTime(2020, 01, 02));
         
-        _cmsBackend = new CmsBackend(files);
+        _cmsBackend = new CmsBackendBuilder(
+                new MarkdownParser(
+                    new MarkdownToHtmlTransformer(),
+                    new ArticleInnerLinksGenerator()),
+                new MarkdownProcessor())
+            .AddContentType<UnitTestArticle>()
+            .AddContent(content1)
+            .AddContent(content2)
+            .Build();
     }
     
     [Fact]
@@ -39,7 +60,7 @@ public class CmsBackendTests
     {
         Assert.Throws<NotFoundException>(() => _cmsBackend.GetEntity(new GetEntityRequest
         {
-            Key = new MdFileKey { Id = "1", ContentType = "1" }
+            Path = ["1", "1"]
         }));
     }
     
@@ -48,7 +69,7 @@ public class CmsBackendTests
     {
         var result = _cmsBackend.GetEntity(new GetEntityRequest
         {
-            Key = new MdFileKey { Id = "introduction", ContentType = "article" },
+            Path = ["docs", "articles", "article1"],
             Properties = ["project"]
         });
         
@@ -74,18 +95,34 @@ public class CmsBackendTests
     }
     
     [Fact]
-    public void GetEntities_ShouldReturnsOnlyFilteredEntities_WhenFilterIsPassed()
+    public void GetEntities_ShouldReturnsOnlyFilteredEntities_WhenComplexFilterIsPassed()
     {
         var result = _cmsBackend.GetEntities(new GetEntitiesRequest
         {
             Filters =
             [
-                new FilterRow { Property = "id", Value = "introduction", Operator = FilterOperator.Equals }
+                new FilterRow { Property = "fileName", Value = "article2", Operator = FilterOperator.Equals },
+                new FilterRow { Property = "project", Value = "project2", Operator = FilterOperator.Equals },
             ],
             Pagination = GetDefaultPagination()
         });
         
         Assert.Single(result.Data);
+    }
+    
+    [Fact]
+    public void GetEntities_ShouldReturnsOnlyFilteredEntities_WhenByContentTypePassed()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow { Property = "contentType", Value = "unitTestArticle", Operator = FilterOperator.Equals }
+            ],
+            Pagination = GetDefaultPagination()
+        });
+        
+        Assert.Equal(2, result.Data.Count);
     }
     
     [Theory]

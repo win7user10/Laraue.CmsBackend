@@ -6,26 +6,37 @@ namespace Laraue.CmsBackend;
 public interface ICmsBackendBuilder
 {
     ICmsBackendBuilder AddContent(ContentProperties properties);
-    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : DocumentType;
+    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseDocumentType;
     ICmsBackend Build();
 }
 
-public class CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcessor markdownProcessor)
+public class CmsBackendBuilder
     : ICmsBackendBuilder
 {
+    private readonly IMarkdownParser _markdownParser;
+    private readonly IMarkdownProcessor _markdownProcessor;
+    
     private readonly ContentTypeRegistry _contentTypeRegistry = new();
     private readonly ParsedMdFileRegistry _parsedMdFileRegistry = new();
+
+    public CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcessor markdownProcessor)
+    {
+        _markdownParser = markdownParser;
+        _markdownProcessor = markdownProcessor;
+
+        AddContentType<DefaultDocumentType>();
+    }
     
     public ICmsBackendBuilder AddContent(ContentProperties properties)
     {
-        var result = markdownParser.Parse(properties);
+        var result = _markdownParser.Parse(properties);
         
         _parsedMdFileRegistry.Add(result);
         
         return this;
     }
 
-    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : DocumentType
+    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseDocumentType
     {
         _contentTypeRegistry.AddContentType<TContentType>();
         
@@ -34,13 +45,13 @@ public class CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcesso
 
     public ICmsBackend Build()
     {
-        var buildResult = markdownProcessor.ApplyRegistrySchemas(
+        var buildResult = _markdownProcessor.ApplyRegistrySchemas(
             _parsedMdFileRegistry.Values,
             _contentTypeRegistry);
 
         if (buildResult.Success)
         {
-            return new CmsBackend(buildResult.MarkdownFiles);
+            return new CmsBackendUnit(buildResult.MarkdownFiles);
         }
 
         throw new CmsBackendException(buildResult.Errors);
@@ -68,9 +79,9 @@ public class CmsBackendException : Exception
             sb.AppendLine()
                 .Append("Entity ")
                 .Append("path: '")
-                .Append(exceptionByEntity.Key.Path)
-                .Append("' id: '")
-                .Append(exceptionByEntity.Key.Id)
+                .Append(string.Join(Path.DirectorySeparatorChar, exceptionByEntity.Key.Path))
+                .Append("' name: '")
+                .Append(exceptionByEntity.Key.FileName)
                 .Append("' type '")
                 .Append(exceptionByEntity.Key.ContentType)
                 .Append('\'')
