@@ -15,7 +15,7 @@ public class ObjectConverter : JsonConverter<object>
         return reader.TokenType switch
         {
             JsonTokenType.String => reader.GetString(),
-            JsonTokenType.Number => reader.TryGetUInt64(out var u) ? (object)u : reader.GetDouble(),
+            JsonTokenType.Number => reader.TryGetInt32(out var u) ? (object)u : reader.GetDouble(),
             JsonTokenType.True => true,
             JsonTokenType.False => false,
             JsonTokenType.Null => null,

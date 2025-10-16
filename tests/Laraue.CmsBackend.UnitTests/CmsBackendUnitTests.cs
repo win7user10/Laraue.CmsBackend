@@ -184,6 +184,48 @@ hi2";
     }
     
     [Fact]
+    public void MoreThan_ShouldWork_WhenPassedToFilter()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow
+                {
+                    Property = "length(content)",
+                    Operator = FilterOperator.More,
+                    Value = 11
+                }
+            ],
+            Pagination = GetDefaultPagination(),
+        });
+        
+        var item = Assert.Single(result.Data);
+        Assert.Equal("project2", item["project"]);
+    }
+    
+    [Fact]
+    public void LessThan_ShouldWork_WhenPassedToFilter()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow
+                {
+                    Property = "length(content)",
+                    Operator = FilterOperator.Less,
+                    Value = 12
+                }
+            ],
+            Pagination = GetDefaultPagination(),
+        });
+        
+        var item = Assert.Single(result.Data);
+        Assert.Equal("project1", item["project"]);
+    }
+    
+    [Fact]
     public void MoreThanOneArgumentFunction_ShouldCorrectlyProcessed_WhenPassedToFilter()
     {
         var result = _cmsBackend.GetEntities(new GetEntitiesRequest

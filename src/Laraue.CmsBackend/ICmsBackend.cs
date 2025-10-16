@@ -61,6 +61,10 @@ public class FilterRow
 public enum FilterOperator
 {
     Equals,
+    More,
+    Less,
+    MoreOrEqual,
+    LessOrEqual,
 }
 
 public class SortRow
@@ -225,6 +229,10 @@ public class CmsBackendUnit(
         return filter.Operator switch
         {
             FilterOperator.Equals => value.Equals(filter.Value),
+            FilterOperator.More => value is IComparable comparable && comparable.CompareTo(filter.Value) > 0,
+            FilterOperator.MoreOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) >= 0,
+            FilterOperator.Less => value is IComparable comparable && comparable.CompareTo(filter.Value) < 0,
+            FilterOperator.LessOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) <= 0,
             _ => throw new NotImplementedException()
         };
     }
