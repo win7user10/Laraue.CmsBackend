@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 using Laraue.CmsBackend.Contracts;
+using Laraue.CmsBackend.Funtions;
 using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.DataAccess.Extensions;
 using Laraue.Core.Exceptions.Web;
@@ -16,12 +17,13 @@ public interface ICmsBackend
 
 public class GetSectionsRequest
 {
-    public required string[] FromPath { get; init; }
+    public string[]? FromPath { get; init; }
     public required int Depth { get; init; }
 }
 
 public class GetEntitiesRequest : IPaginatedRequest
 {
+    public string[]? FromPath { get; init; }
     public string[]? Properties { get; set; }
     public FilterRow[]? Filters { get; set; }
     public SortRow[]? Sorting { get; set; }
@@ -37,6 +39,7 @@ public class GetEntityRequest
 public class CountPropertyValuesRequest
 {
     public required string Property { get; init; }
+    public string[]? FromPath { get; set; }
     public FilterRow[]? Filters { get; init; }
 }
 
@@ -72,7 +75,10 @@ public enum SortOrder
     Descending,
 }
 
-public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
+public class CmsBackendUnit(
+    ProcessedMdFileRegistry registry,
+    CmsBackendFunctionsRegistry functionsRegistry)
+    : ICmsBackend
 {
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
     {
@@ -83,7 +89,7 @@ public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
 
     public IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request)
     {
-        var source = registry.GetEntities();
+        var source = registry.GetEntities(request.FromPath);
         var filteredSource = ApplyFilters(source, request.Filters);
         var orderedSource = ApplySort(filteredSource, request.Sorting);
         var projectedSource = ApplyMap(orderedSource, request.Properties);
@@ -93,7 +99,7 @@ public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
 
     public List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request)
     {
-        var source = registry.GetEntities();
+        var source = registry.GetEntities(request.FromPath);
         var filteredSource = ApplyFilters(source, request.Filters);
         var projectedSource = ApplyMap(filteredSource, [request.Property]);
 
@@ -120,7 +126,7 @@ public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
 
     public List<SectionItem> GetSections(GetSectionsRequest request)
     {
-        var subSections = registry.GetSubSections(request.FromPath, request.Depth);
+        var subSections = registry.GetSubSections(request.FromPath ?? [], request.Depth);
 
         return subSections.Select(Map).ToList();
     }
@@ -194,9 +200,26 @@ public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
 
     private bool MatchFilter(ProcessedMdFile item, FilterRow filter)
     {
-        if (!item.TryGetValue(filter.Property, out var value))
+        var property = filter.Property;
+        
+        if (functionsRegistry.TryParsePropertyAsFunction(filter.Property, out var functionData))
+        {
+            property = functionData.ParameterName;
+        }
+        
+        if (!item.TryGetValue(property, out var value))
         {
             return true;
+        }
+
+        if (functionData is not null)
+        {
+            if (!functionsRegistry.TryExecuteDelegate(functionData, value, out var newValue))
+            {
+                throw new InvalidMethodException($"There is no registered function that can handle '{filter.Property}'.");
+            }
+
+            value = newValue;
         }
 
         return filter.Operator switch
@@ -210,16 +233,42 @@ public class CmsBackendUnit(ProcessedMdFileRegistry registry) : ICmsBackend
     {
         return mdFiles.Select(x => MapMdFileToDto(x, includeProperties));
     }
-
-    private static Dictionary<string, object> MapMdFileToDto(ProcessedMdFile mdFile, string[]? includeProperties)
+    
+    private Dictionary<string, object> MapMdFileToDto(ProcessedMdFile mdFile, string[]? includeProperties)
     {
         if (includeProperties is null)
         {
             return mdFile;
         }
         
-        return includeProperties
-            .Where(mdFile.ContainsKey)
-            .ToDictionary(propertyName => propertyName, propertyName => mdFile[propertyName]);
+        var result = new Dictionary<string, object>();
+        foreach (var includeProperty in includeProperties)
+        {
+            var actualName = includeProperty;
+            if (functionsRegistry.TryParsePropertyAsFunction(includeProperty, out var functionData))
+            {
+                actualName = functionData.ParameterName;
+            }
+
+            // TODO - compile the method only once.
+            if (mdFile.TryGetValue(actualName, out var value))
+            {
+                if (functionData is null)
+                {
+                    result[actualName] = value;
+                }
+                else
+                {
+                    if (!functionsRegistry.TryExecuteDelegate(functionData, value, out var newValue))
+                    {
+                        throw new InvalidMethodException($"There is no registered function that can handle '{includeProperty}'.");
+                    }
+
+                    result[functionData.FunctionName] = newValue;
+                }
+            }
+        }
+
+        return result;
     }
 }

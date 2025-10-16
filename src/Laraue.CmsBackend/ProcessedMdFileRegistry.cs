@@ -53,9 +53,9 @@ public class ProcessedMdFileRegistry
         return false;
     }
 
-    public IEnumerable<ProcessedMdFile> GetEntities()
+    public IEnumerable<ProcessedMdFile> GetEntities(string[]? path)
     {
-        return GetSubNodesByPath(null, int.MaxValue)
+        return GetSubNodesByPath(path ?? [], int.MaxValue)
             .Where(node => node.NodeMdFile != null)
             .Select(node => node.NodeMdFile!);
     }
@@ -78,12 +78,11 @@ public class ProcessedMdFileRegistry
         return true;
     }
     
-    private IEnumerable<Node> GetSubNodesByPath(string? fromPath, int depth)
+    private IEnumerable<Node> GetSubNodesByPath(string[] fromPath, int depth)
     {
         var node = _hierarchy;
-        var pathSections = fromPath?.Split('/') ?? [];
         
-        foreach (var pathSegment in pathSections)
+        foreach (var pathSegment in fromPath)
         {
             if (!node.TryGetNode(pathSegment, out node))
             {

@@ -1,5 +1,6 @@
 ﻿using System.Text;
 using Laraue.CmsBackend.Contracts;
+using Laraue.CmsBackend.Funtions;
 
 namespace Laraue.CmsBackend;
 
@@ -7,17 +8,18 @@ public interface ICmsBackendBuilder
 {
     ICmsBackendBuilder AddContent(ContentProperties properties);
     ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseDocumentType;
+    ICmsBackendBuilder AddFunctionsSupport(Type functionsClass);
     ICmsBackend Build();
 }
 
-public class CmsBackendBuilder
-    : ICmsBackendBuilder
+public class CmsBackendBuilder : ICmsBackendBuilder
 {
     private readonly IMarkdownParser _markdownParser;
     private readonly IMarkdownProcessor _markdownProcessor;
     
     private readonly ContentTypeRegistry _contentTypeRegistry = new();
     private readonly ParsedMdFileRegistry _parsedMdFileRegistry = new();
+    private readonly CmsBackendFunctionsRegistry _cmsBackendFunctionsRegistry = new();
 
     public CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcessor markdownProcessor)
     {
@@ -25,6 +27,7 @@ public class CmsBackendBuilder
         _markdownProcessor = markdownProcessor;
 
         AddContentType<DefaultDocumentType>();
+        AddFunctionsSupport(typeof(StringFunctions));
     }
     
     public ICmsBackendBuilder AddContent(ContentProperties properties)
@@ -43,6 +46,13 @@ public class CmsBackendBuilder
         return this;
     }
 
+    public ICmsBackendBuilder AddFunctionsSupport(Type functionsClass)
+    {
+        _cmsBackendFunctionsRegistry.AddFunctionsSupport(functionsClass);
+        
+        return this;
+    }
+
     public ICmsBackend Build()
     {
         var buildResult = _markdownProcessor.ApplyRegistrySchemas(
@@ -51,7 +61,7 @@ public class CmsBackendBuilder
 
         if (buildResult.Success)
         {
-            return new CmsBackendUnit(buildResult.MarkdownFiles);
+            return new CmsBackendUnit(buildResult.MarkdownFiles, _cmsBackendFunctionsRegistry);
         }
 
         throw new CmsBackendException(buildResult.Errors);

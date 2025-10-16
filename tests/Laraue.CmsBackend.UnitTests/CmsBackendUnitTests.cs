@@ -35,7 +35,7 @@ tags: [tag2, tag3]
 project: project2
 type: unitTestArticle
 ---
-hi";
+hi2";
         
         var content2 = new ContentProperties(
             content2Text,
@@ -161,6 +161,71 @@ hi";
         Assert.Equal(1, resultDictionary["tag1"]);
         Assert.Equal(2, resultDictionary["tag2"]);
         Assert.Equal(1, resultDictionary["tag3"]);
+    }
+    
+    [Fact]
+    public void OneArgumentFunction_ShouldCorrectlyProcessed_WhenPassedToFilter()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow
+                {
+                    Property = "length(content)",
+                    Operator = FilterOperator.Equals,
+                    Value = 11
+                }
+            ],
+            Pagination = GetDefaultPagination(),
+        });
+        
+        Assert.Single(result.Data);
+    }
+    
+    [Fact]
+    public void MoreThanOneArgumentFunction_ShouldCorrectlyProcessed_WhenPassedToFilter()
+    {
+        var result = _cmsBackend.GetEntities(new GetEntitiesRequest
+        {
+            Filters =
+            [
+                new FilterRow
+                {
+                    Property = "substring(project, 7, 1)",
+                    Operator = FilterOperator.Equals,
+                    Value = "1"
+                }
+            ],
+            Pagination = GetDefaultPagination(),
+        });
+        
+        var item = Assert.Single(result.Data);
+        Assert.Equal("project1", item["project"]);
+    }
+    
+    [Fact]
+    public void OneArgumentFunction_ShouldCorrectlyProcessed_WhenUsedInMapping()
+    {
+        var result = _cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Path = ["docs", "articles", "article1"],
+            Properties = ["length(content)"]
+        });
+        
+        Assert.Equal(11, result["length"]);
+    }
+    
+    [Fact]
+    public void MoreThanOneArgumentFunction_ShouldCorrectlyProcessed_WhenUsedInMapping()
+    {
+        var result = _cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Path = ["docs", "articles", "article1"],
+            Properties = ["substring(project, 0, 7)"]
+        });
+        
+        Assert.Equal("project", result["substring"]);
     }
 
     private static PaginationData GetDefaultPagination()

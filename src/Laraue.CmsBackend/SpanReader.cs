@@ -62,6 +62,76 @@ public ref struct SpanReader(ReadOnlySpan<char> source)
             lastNonWhitespaceCharacterIndex = currentIndex;
         }
     }
+
+    public ReadOnlySpan<char> ReadIdentifier()
+    {
+        var currentIndex = 0;
+        TakeWhile(char.IsWhiteSpace);
+        if (TryPeekChar('"'))
+        {
+            return ReadString();
+        }
+        
+        while (true)
+        {
+            if (!TryPeekChar(currentIndex, out var nextChar))
+            {
+                break;
+            }
+
+            if (!char.IsLetterOrDigit(nextChar))
+            {
+                break;
+            }
+            
+            currentIndex++;
+        }
+
+        return SetNewSourceIndex(currentIndex);
+    }
+
+    public ReadOnlySpan<char> ReadString()
+    {
+        var currentIndex = 1;
+        while (true)
+        {
+            if (!TryPeekChar(currentIndex, out var nextChar))
+            {
+                throw new InvalidOperationException("String end was not found");
+            }
+            
+            currentIndex++;
+
+            if (nextChar == '"')
+            {
+                return SetNewSourceIndex(currentIndex);
+            }
+        }
+    }
+    
+    public ReadOnlySpan<char> ReadWord()
+    {
+        var currentIndex = 0;
+        TakeWhile(char.IsWhiteSpace);
+        while (true)
+        {
+            if (!TryPeekChar(currentIndex, out var nextChar) || !char.IsLetter(nextChar))
+            {
+                break;
+            }
+
+            currentIndex++;
+        }
+
+        return SetNewSourceIndex(currentIndex);
+    }
+
+    private ReadOnlySpan<char> SetNewSourceIndex(int nextIndex)
+    {
+        var result = Source[..nextIndex];
+        Source = Source[nextIndex..];
+        return result;
+    }
     
     public ReadOnlySpan<char> ReadTo(string to)
     {
@@ -90,9 +160,7 @@ public ref struct SpanReader(ReadOnlySpan<char> source)
                         continue;
                     }
 
-                    var result = Source[..index];
-                    Source = Source[index..];
-                    return result;
+                    return SetNewSourceIndex(index);
                 }
             }
             else
@@ -113,9 +181,7 @@ public ref struct SpanReader(ReadOnlySpan<char> source)
             }
             else
             {
-                var result = Source[..index];
-                Source = Source[index..];
-                return result;
+                return SetNewSourceIndex(index);
             }
         }
     }
@@ -179,6 +245,11 @@ public ref struct SpanReader(ReadOnlySpan<char> source)
         Source = Source[1..];
         return true;
 
+    }
+
+    public bool TryPop(char next)
+    {
+        return TryPop(new ReadOnlySpan<char>([next]));
     }
     
     public bool TryPop(ReadOnlySpan<char> str)

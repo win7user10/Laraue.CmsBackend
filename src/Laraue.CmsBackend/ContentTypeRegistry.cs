@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Laraue.CmsBackend.Contracts;
 
 namespace Laraue.CmsBackend;
 
@@ -51,36 +52,11 @@ public class ContentTypeRegistry
         {
             IsArray = property.PropertyType.IsArray,
             Name = property.Name.ToCamelCase().ToString(),
-            Type = GetPropertyType(property.PropertyType.IsArray ? property.PropertyType.GetElementType()! : property.PropertyType),
+            Type = (property.PropertyType.IsArray ? property.PropertyType.GetElementType()! : property.PropertyType).GetCmsPropertyType(),
             IsRequired = Attribute.IsDefined(property, typeof(RequiredMemberAttribute))
         };
 
         return data;
-    }
-
-    private ContentTypePropertyType GetPropertyType(Type type)
-    {
-        if (type == typeof(string))
-        {
-            return ContentTypePropertyType.String;
-        }
-
-        if (type == typeof(float) || type == typeof(double) || type == typeof(decimal))
-        {
-            return ContentTypePropertyType.Float;
-        }
-        
-        if (type == typeof(DateTime))
-        {
-            return ContentTypePropertyType.DateTime;
-        }
-        
-        if (type == typeof(int))
-        {
-            return ContentTypePropertyType.Number;
-        }
-        
-        throw new NotSupportedException($"Property {type} is not supported");
     }
 
     public record ContentTypeSchema
@@ -95,13 +71,5 @@ public class ContentTypeRegistry
         public required bool IsArray { get; init; }
         public required bool IsRequired { get; init; }
         public required ContentTypePropertyType Type { get; init; }
-    }
-    
-    public enum ContentTypePropertyType
-    {
-        String,
-        Number,
-        DateTime,
-        Float,
     }
 }

@@ -86,7 +86,7 @@ public class MarkdownProcessor : IMarkdownProcessor
 
     private static object? Parse(
         string value,
-        ContentTypeRegistry.ContentTypePropertyType type,
+        ContentTypePropertyType type,
         bool isArray)
     {
         if (isArray)
@@ -103,13 +103,13 @@ public class MarkdownProcessor : IMarkdownProcessor
         
         switch (type)
         {
-            case ContentTypeRegistry.ContentTypePropertyType.String:
+            case ContentTypePropertyType.String:
                 return value;
-            case ContentTypeRegistry.ContentTypePropertyType.Number:
+            case ContentTypePropertyType.Number:
                 return int.TryParse(value, out var intValue) ? intValue : null;
-            case ContentTypeRegistry.ContentTypePropertyType.DateTime:
+            case ContentTypePropertyType.DateTime:
                 return DateTime.TryParse(value, out var dateTime) ? dateTime : null;
-            case ContentTypeRegistry.ContentTypePropertyType.Float:
+            case ContentTypePropertyType.Float:
                 return double.TryParse(value, out var doubleValue) ? doubleValue : null;
             default:
                 throw new InvalidOperationException();
