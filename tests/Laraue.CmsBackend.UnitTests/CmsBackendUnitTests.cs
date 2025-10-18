@@ -271,6 +271,32 @@ hi2";
     }
     
     [Fact]
+    public void AsSyntax_ShouldWork_WhenPropertyPassed()
+    {
+        var result = _cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Path = ["docs", "articles", "article1"],
+            Properties = ["content as myContent"]
+        });
+        
+        Assert.True(result.ContainsKey("myContent"));
+        Assert.False(result.ContainsKey("content"));
+    }
+    
+    [Fact]
+    public void AsSyntax_ShouldWork_WhenFunctionPassed()
+    {
+        var result = _cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Path = ["docs", "articles", "article1"],
+            Properties = ["length(content) as contentLength"]
+        });
+        
+        Assert.True(result.ContainsKey("contentLength"));
+        Assert.False(result.ContainsKey("length"));
+    }
+    
+    [Fact]
     public void MoreThanOneArgumentFunction_ShouldCorrectlyProcessed_WhenUsedInMapping()
     {
         var result = _cmsBackend.GetEntity(new GetEntityRequest

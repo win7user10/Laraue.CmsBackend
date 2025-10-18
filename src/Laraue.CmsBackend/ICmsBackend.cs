@@ -207,20 +207,18 @@ public class CmsBackendUnit(
     private bool MatchFilter(ProcessedMdFile item, FilterRow filter)
     {
         var property = filter.Property;
-        
-        if (functionsRegistry.TryParsePropertyAsFunction(filter.Property, out var functionData))
-        {
-            property = functionData.ParameterName;
-        }
+
+        var parameters = PropertyParser.ParsePropertyParameters(filter.Property);
+        property = parameters.FunctionParameters?.CalleeName ?? property;
         
         if (!item.TryGetValue(property, out var value))
         {
             return false;
         }
 
-        if (functionData is not null)
+        if (parameters.FunctionParameters is not null)
         {
-            if (!functionsRegistry.TryExecuteDelegate(functionData, value, out var newValue))
+            if (!functionsRegistry.TryExecuteDelegate(parameters.FunctionParameters, value, out var newValue))
             {
                 throw new InvalidMethodException($"There is no registered function that can handle '{filter.Property}'.");
             }
@@ -255,27 +253,38 @@ public class CmsBackendUnit(
         var result = new Dictionary<string, object>();
         foreach (var includeProperty in includeProperties)
         {
-            var actualName = includeProperty;
-            if (functionsRegistry.TryParsePropertyAsFunction(includeProperty, out var functionData))
+            var requestedProperty = includeProperty;
+            string? alias = null;
+            
+            var propertyParameters = PropertyParser.ParsePropertyParameters(includeProperty);
+            if (propertyParameters.Alias is not null)
             {
-                actualName = functionData.ParameterName;
+                alias = propertyParameters.Alias;
+            }
+            if (propertyParameters.FunctionParameters is not null)
+            {
+                requestedProperty = propertyParameters.FunctionParameters.CalleeName;
+            }
+            if (propertyParameters.FunctionParameters is null)
+            {
+                requestedProperty = propertyParameters.PropertyName ?? throw new InvalidOperationException();
             }
 
             // TODO - compile the method only once.
-            if (mdFile.TryGetValue(actualName, out var value))
+            if (mdFile.TryGetValue(requestedProperty, out var value))
             {
-                if (functionData is null)
+                if (propertyParameters.FunctionParameters is null)
                 {
-                    result[actualName] = value;
+                    result[alias ?? requestedProperty] = value;
                 }
                 else
                 {
-                    if (!functionsRegistry.TryExecuteDelegate(functionData, value, out var newValue))
+                    if (!functionsRegistry.TryExecuteDelegate(propertyParameters.FunctionParameters, value, out var newValue))
                     {
                         throw new InvalidMethodException($"There is no registered function that can handle '{includeProperty}'.");
                     }
 
-                    result[functionData.FunctionName] = newValue;
+                    result[alias ?? propertyParameters.FunctionParameters.FunctionName] = newValue;
                 }
             }
         }

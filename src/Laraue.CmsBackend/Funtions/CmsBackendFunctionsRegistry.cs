@@ -34,50 +34,6 @@ public class CmsBackendFunctionsRegistry
         }
     }
 
-    // Check, if the passed property is actually function then should return new property name + delegate that 
-    // consumes the object and return a new object to make the further comparison
-    public bool TryParsePropertyAsFunction(string propertyValue, [NotNullWhen(true)] out FunctionParameters? function)
-    {
-        var reader = new SpanReader(propertyValue);
-        
-        var identifier = reader.ReadWord();
-        if (!reader.TryPop('('))
-        {
-            function = null;
-            return false;
-        }
-
-        var otherParameters = new List<string>();
-        string? objectParameterName = null;
-        
-        do
-        {
-            var nextWord = reader.ReadIdentifier();
-            if (objectParameterName is null)
-            {
-                objectParameterName = nextWord.ToString();
-            }
-            else
-            {
-                otherParameters.Add(nextWord.ToString());
-            }
-            
-        } while (reader.TryPop(','));
-
-        if (!reader.TryPop(')'))
-        {
-            throw new InvalidMethodException("Wrong syntax");
-        }
-
-        function = new FunctionParameters
-        {
-            FunctionName = identifier.ToString(),
-            OtherParameters = otherParameters.ToArray(),
-            ParameterName = objectParameterName ?? throw new InvalidMethodException("Parameter argument should be passed"),
-        };
-        return true;
-    }
-
     public bool TryGetDelegate(
         FunctionParameters function,
         object realValue,
@@ -160,13 +116,6 @@ public class CmsBackendFunctionsRegistry
 
         function = suitableMethod;
         return true;
-    }
-
-    public class FunctionParameters
-    {
-        public required string FunctionName { get; set; }
-        public required string ParameterName { get; set; }
-        public required string[] OtherParameters { get; set; }
     }
 
     private void AddFunctionSupport(MethodInfo method)
