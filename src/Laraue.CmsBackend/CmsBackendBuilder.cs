@@ -28,6 +28,7 @@ public class CmsBackendBuilder : ICmsBackendBuilder
 
         AddContentType<DefaultDocumentType>();
         AddFunctionsSupport(typeof(StringFunctions));
+        AddFunctionsSupport(typeof(DateTimeFunctions));
     }
     
     public ICmsBackendBuilder AddContent(ContentProperties properties)

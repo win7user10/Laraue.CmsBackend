@@ -11,12 +11,12 @@ public class ProcessedMdFileRegistry
 
     public bool TryAdd(ProcessedMdFile mdFile)
     {
-        var filePath = (FilePath)mdFile["path"];
+        var filePath = (string[])mdFile["path"];
         var fileName = (string)mdFile["fileName"];
         
         var allSegments = fileName == IndexFileName
-            ? filePath.Segments
-            : filePath.Segments.Append(fileName).ToArray();
+            ? filePath
+            : filePath.Append(fileName).ToArray();
 
         var node = _hierarchy;
         foreach (var pathSegment in allSegments)

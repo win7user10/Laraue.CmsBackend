@@ -10,7 +10,7 @@ public sealed class ProcessedMdFile : Dictionary<string, object>
             ["updatedAt"] = mdFile.UpdatedAt,
             ["createdAt"] = mdFile.CreatedAt,
             ["content"] = mdFile.Content,
-            ["path"] = mdFile.Path,
+            ["path"] = mdFile.Path.Segments,
             ["innerLinks"] = mdFile.InnerLinks,
         })
     {}

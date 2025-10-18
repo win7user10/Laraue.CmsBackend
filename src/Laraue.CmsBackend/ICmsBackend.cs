@@ -1,4 +1,5 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Collections;
+using System.Text.Json.Serialization;
 using Laraue.CmsBackend.Contracts;
 using Laraue.CmsBackend.Funtions;
 using Laraue.Core.DataAccess.Contracts;
@@ -65,6 +66,7 @@ public enum FilterOperator
     Less,
     MoreOrEqual,
     LessOrEqual,
+    In,
 }
 
 public class SortRow
@@ -213,7 +215,7 @@ public class CmsBackendUnit(
         
         if (!item.TryGetValue(property, out var value))
         {
-            return true;
+            return false;
         }
 
         if (functionData is not null)
@@ -233,6 +235,7 @@ public class CmsBackendUnit(
             FilterOperator.MoreOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) >= 0,
             FilterOperator.Less => value is IComparable comparable && comparable.CompareTo(filter.Value) < 0,
             FilterOperator.LessOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) <= 0,
+            FilterOperator.In => value is IEnumerable enumerable && enumerable.Cast<object>().Contains(filter.Value),
             _ => throw new NotImplementedException()
         };
     }

@@ -259,6 +259,18 @@ hi2";
     }
     
     [Fact]
+    public void Format_ShouldWorkWithDateTime_Always()
+    {
+        var result = _cmsBackend.GetEntity(new GetEntityRequest
+        {
+            Path = ["docs", "articles", "article1"],
+            Properties = ["format(createdAt, \"dd:MM:yyyy\")"]
+        });
+        
+        Assert.Equal("01:01:2020", result["format"]);
+    }
+    
+    [Fact]
     public void MoreThanOneArgumentFunction_ShouldCorrectlyProcessed_WhenUsedInMapping()
     {
         var result = _cmsBackend.GetEntity(new GetEntityRequest
