@@ -81,31 +81,38 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         while (!IsParseCompleted && !Match(MdTokenType.NewLine))
         {
             Skip(MdTokenType.Whitespace);
-            
-            var content = new List<MdElement>();
-            int? lastNonWhitespaceElementNumber = null;
-            
-            do
-            {
-                // Prevent writing whitespaces at the end of string
-                if (Check(MdTokenType.Whitespace) && lastNonWhitespaceElementNumber == null)
-                    lastNonWhitespaceElementNumber = content.Count;
-                else
-                    lastNonWhitespaceElementNumber = null;
-                
-                var nextElement = ReadInlineElement()!;
-                content.Add(nextElement);
-                
-            } while (!IsParseCompleted && !Match(MdTokenType.Pipe, MdTokenType.NewLine));
 
-            var result = lastNonWhitespaceElementNumber != null
-                ? content.Take(lastNonWhitespaceElementNumber.Value)
-                : content.ToArray();
+            var elements = GetTrimmedLineElements(MdTokenType.Pipe);
             
-            cells.Add(new TableCell(result.ToArray()));
+            cells.Add(new TableCell(elements));
         }
         
         return new TableRow(cells.ToArray());
+    }
+
+    private MdElement[] GetTrimmedLineElements(params MdTokenType?[] stopTokens)
+    {
+        var content = new List<MdElement>();
+        int? lastNonWhitespaceElementNumber = null;
+        
+        do
+        {
+            // Prevent writing whitespaces at the end of string
+            if (Check(MdTokenType.Whitespace) && lastNonWhitespaceElementNumber == null)
+                lastNonWhitespaceElementNumber = content.Count;
+            else
+                lastNonWhitespaceElementNumber = null;
+                
+            var nextElement = ReadInlineElement()!;
+            content.Add(nextElement);
+                
+        } while (!IsParseCompleted && !Match(MdTokenType.NewLine) && !Match(stopTokens));
+
+        var result = lastNonWhitespaceElementNumber != null
+            ? content.Take(lastNonWhitespaceElementNumber.Value).ToArray()
+            : content.ToArray();
+
+        return result;
     }
     
     private ContentBlock ReadHeadingBlock()
@@ -122,9 +129,9 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             headingLevel++;
         } while (Match(MdTokenType.NumberSign));
         
-        // Read inline
-        var inner = ReadInline();
-        return new HeadingBlock(headingLevel, inner);
+        Skip(MdTokenType.Whitespace);
+        var headingElements = GetTrimmedLineElements();
+        return new HeadingBlock(headingLevel, headingElements);
     }
 
     private ContentBlock ReadCodeBlock()
@@ -371,7 +378,7 @@ public record CodeBlock(string? Language, ContentBlock[] Elements) : ContentBloc
 public record OrderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
 public record UnorderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
 public record ContentWithIdent(int Ident, MdElement[] Elements);
-public record HeadingBlock(int Level, ContentBlock Content) : ContentBlock;
+public record HeadingBlock(int Level, MdElement[] Elements) : ContentBlock;
 
 public record PlainBlock(MdElement[] Elements) : ContentBlock
 {

@@ -57,6 +57,30 @@ hi";
 
         Assert.Equal("<ul><li>Item #1</li><li>Item #2</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
     }
+    
+    [Theory]
+    [InlineData("Hi, _Ann_")]
+    [InlineData("Hi, *Ann*")]
+    public void ItalicItems_ShouldBeRendered_Always(string text)
+    {
+        Assert.Equal("<p>Hi, <em>Ann</em></p>", ToHtml(text));
+    }
+    
+    [Theory]
+    [InlineData("Hi, __Ann__")]
+    [InlineData("Hi, **Ann**")]
+    public void BoldItems_ShouldBeRendered_Always(string text)
+    {
+        Assert.Equal("<p>Hi, <b>Ann</b></p>", ToHtml(text));
+    }
+    
+    [Fact]
+    public void Heading_ShouldBeRendered_Always()
+    {
+        var contentText = "# Hello World";
+
+        Assert.Equal("<h1 id=\"hello-world\">Hello World</h1>", ToHtml(contentText));
+    }
 
     private string ToHtml(string content)
     {

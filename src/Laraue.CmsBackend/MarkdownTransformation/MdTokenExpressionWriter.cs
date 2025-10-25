@@ -84,15 +84,15 @@ public  class MdTokenExpressionWriter
     private void Write(StringBuilder sb, HeadingBlock headingBlock)
     {
         var innerSb = new StringBuilder();
-        Write(innerSb, headingBlock.Content);
+        Write(innerSb, headingBlock.Elements);
         var id = HeadingUtility.GenerateHeadingId(innerSb.ToString());
         
         sb
             .Append($"<h{headingBlock.Level} id=\"")
             .Append(id)
-            .Append("\"/>")
+            .Append("\">")
             .Append(innerSb)
-            .AppendLine($"</h{headingBlock.Level}>");
+            .Append($"</h{headingBlock.Level}>");
     }
 
     private void Write(StringBuilder sb, CodeBlock codeBlock)
