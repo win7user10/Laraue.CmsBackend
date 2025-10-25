@@ -37,6 +37,26 @@ hi";
 
         Assert.Equal("<table><thead><tr><th>Name</th><th>Age</th></tr></thead><tbody><tr><td>Henry</td><td>15</td></tr><tr><td>Alex</td><td>17</td></tr></tbody></table>", ToHtml(contentText));
     }
+    
+    [Fact]
+    public void OrderedLists_ShouldBeRendered_Always()
+    {
+        var contentText = @"1. Item #1
+1. Item #2
+    1. Item #3";
+
+        Assert.Equal("<ol><li>Item #1</li><li>Item #2</li><ol><li>Item #3</li></ol></ol>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void UnorderedLists_ShouldBeRendered_Always()
+    {
+        var contentText = @"- Item #1
+- Item #2
+    - Item #3";
+
+        Assert.Equal("<ul><li>Item #1</li><li>Item #2</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
+    }
 
     private string ToHtml(string content)
     {

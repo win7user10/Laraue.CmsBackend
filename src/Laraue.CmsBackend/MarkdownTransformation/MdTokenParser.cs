@@ -170,7 +170,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         do
         {
             Advance(3);
-            listBlocks.AddRange(new ContentWithIdent(nextIdent, ReadInline()));
+            listBlocks.Add(new ContentWithIdent(nextIdent, ReadInlineElements()));
             nextIdent = 0;
             while (Match(MdTokenType.Ident))
                 nextIdent++;
@@ -192,7 +192,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         do
         {
             Advance(2);
-            listBlocks.AddRange(new ContentWithIdent(nextIdent, ReadInline()));
+            listBlocks.AddRange(new ContentWithIdent(nextIdent, ReadInlineElements()));
             nextIdent = 0;
             while (Match(MdTokenType.Ident))
                 nextIdent++;
@@ -203,6 +203,11 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     
     // Read one block once then group them
     private PlainBlock ReadInline()
+    {
+        return new PlainBlock(ReadInlineElements());
+    }
+    
+    private MdElement[] ReadInlineElements()
     {
         var result = new List<MdElement>();
         do
@@ -217,8 +222,8 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
                 break;
             }
         } while (!IsParseCompleted && !Match(MdTokenType.LineBreak, MdTokenType.NewLine));
-        
-        return new PlainBlock(result.ToArray());
+
+        return result.ToArray();
     }
 
     private MdElement? ReadInlineElement()
@@ -365,7 +370,7 @@ public abstract record ContentBlock;
 public record CodeBlock(string? Language, ContentBlock[] Elements) : ContentBlock;
 public record OrderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
 public record UnorderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
-public record ContentWithIdent(int Ident, ContentBlock Block);
+public record ContentWithIdent(int Ident, MdElement[] Elements);
 public record HeadingBlock(int Level, ContentBlock Content) : ContentBlock;
 
 public record PlainBlock(MdElement[] Elements) : ContentBlock

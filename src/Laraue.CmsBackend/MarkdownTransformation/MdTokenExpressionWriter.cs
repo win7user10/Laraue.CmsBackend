@@ -70,7 +70,7 @@ public  class MdTokenExpressionWriter
             }
             
             sb.Append("<li>");
-            Write(sb, element.Block);
+            Write(sb, element.Elements);
             sb.Append("</li>");
         }
 
