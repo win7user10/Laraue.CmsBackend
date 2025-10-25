@@ -13,6 +13,9 @@
     <ItemGroup>
       <PackageReference Include="Laraue.Core.DataAccess" Version="9.1.0" />
       <PackageReference Include="Laraue.Core.Exceptions" Version="9.0.2" />
+      <PackageReference Include="Laraue.Interpreter.Parsing" Version="0.0.2" />
+      <PackageReference Include="Laraue.Interpreter.Scanning" Version="0.0.2" />
+      <PackageReference Include="Laraue.Interpreter.Common" Version="0.0.2" />
     </ItemGroup>
 
 </Project>

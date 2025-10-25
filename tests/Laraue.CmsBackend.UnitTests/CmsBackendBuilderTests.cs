@@ -1,6 +1,7 @@
 ﻿using Laraue.CmsBackend.Extensions;
 using Laraue.CmsBackend.MarkdownTransformation;
 using Laraue.CmsBackend.UnitTests.types;
+using Laraue.Core.DataAccess.Contracts;
 
 namespace Laraue.CmsBackend.UnitTests;
 

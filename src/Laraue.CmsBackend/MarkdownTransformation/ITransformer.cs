@@ -2,5 +2,5 @@
 
 public interface ITransformer
 {
-    string Transform(string markdown);
+    string Transform(MarkdownTree expr);
 }

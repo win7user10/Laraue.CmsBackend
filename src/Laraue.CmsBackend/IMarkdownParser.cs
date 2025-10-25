@@ -1,7 +1,8 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using System.Text.RegularExpressions;
-using Laraue.CmsBackend.Contracts;
+﻿using Laraue.CmsBackend.Contracts;
 using Laraue.CmsBackend.MarkdownTransformation;
+using Laraue.Interpreter.Common;
+using Laraue.Interpreter.Parsing.Extensions;
+using Laraue.Interpreter.Scanning.Extensions;
 
 namespace Laraue.CmsBackend;
 
@@ -17,7 +18,14 @@ public class MarkdownParser(
 {
     public ParsedMdFile Parse(ContentProperties properties)
     {
-        return new InternalParser(markdownContentTransformer, articleInnerLinksGenerator, properties).Parse();
+        try
+        {
+            return new InternalParser(markdownContentTransformer, articleInnerLinksGenerator, properties).Parse();
+        }
+        catch (CompileException exception)
+        {
+            throw new MarkdownParserException($"Incorrect markdown: {exception.Message}", exception);
+        }
     }
     
     private class InternalParser(
@@ -25,46 +33,29 @@ public class MarkdownParser(
         IArticleInnerLinksGenerator articleInnerLinksGenerator,
         ContentProperties contentProperties)
     {
-        private readonly StringReader _stringReader = new (contentProperties.Markdown);
-        private int _lineNumber;
-        
         public ParsedMdFile Parse()
         {
-            if (!TryReadLine(out var line) || !line.StartsWith("---"))
-            {
-                throw new MarkdownParserException("Metadata section start is excepted", _lineNumber);
-            }
-
-            // Read properties
-            var properties = new Dictionary<string, ParsedMdFileProperty>();
-            while (true)
-            {
-                var lineNumber = _lineNumber;
-                if (!TryReadLine(out line))
-                {
-                    throw new MarkdownParserException("Excepted metadata definition or end of section but EOF received", _lineNumber);
-                }
-                
-                if (line.StartsWith("---"))
-                {
-                    break;
-                }
-                
-                var property = ParseProperty(line, lineNumber);
-                properties.Add(property.Name, property);
-            }
-        
-            // Read text
-            var content = GetRemainedString();
-            var links = articleInnerLinksGenerator.ParseLinks(content);
+            var scanner = new MdTokenScanner(contentProperties.Markdown);
+            var scanResult = scanner.ScanTokens();
+            scanResult.ThrowOnAny();
             
+            var parser = new MdTokenParser(scanResult.Tokens);
+            var parseResult = parser.Parse();
+            parseResult.ThrowOnAny();
+
+            var content = contentProperties.Markdown;
+            
+            // Read text
+            var links = articleInnerLinksGenerator.ParseLinks(parseResult.Result!);
             if (markdownContentTransformer is not null)
             {
-                content = markdownContentTransformer.Transform(content);
+                content = markdownContentTransformer.Transform(parseResult.Result!);
             }
+            
+            var properties = ParseProperties(parseResult.Result!);
 
             var contentType = properties.Remove("type", out var contentTypeProperty)
-                ? contentTypeProperty.Value
+                ? contentTypeProperty.Value?.ToString() ?? ContentTypeRegistry.UndefinedContentType
                 : ContentTypeRegistry.UndefinedContentType;
         
             return new ParsedMdFile
@@ -78,52 +69,24 @@ public class MarkdownParser(
                 Path = contentProperties.Path,
                 InnerLinks = links,
             };
-
-            string PopPropertyValueOrThrow(string key)
-            {
-                if (!properties.Remove(key, out var value))
-                {
-                    throw new MarkdownParserException($"Property '{key}' not found", _lineNumber);
-                }
-
-                return value.Value;
-            }
         }
+    }
 
-        private static readonly Regex PropertyRegex = new("\\s?(\\w+)\\s?:\\s?([^\\n]+)\\s?", RegexOptions.Compiled);
-        private ParsedMdFileProperty ParseProperty(string text, int lineNumber)
+    private static Dictionary<string, ParsedMdFileProperty> ParseProperties(MarkdownTree markdownTree)
+    {
+        var result = new Dictionary<string, ParsedMdFileProperty>();
+        foreach (var header in markdownTree.Headers)
         {
-            var match = PropertyRegex.Match(text);
-            if (!match.Success)
+            var property = new ParsedMdFileProperty()
             {
-                throw new MarkdownParserException($"The string '{text}' does not match the expected format", lineNumber);
-            }
-
-            return new ParsedMdFileProperty
-            {
-                Name = match.Groups[1].Value,
-                Value = match.Groups[2].Value,
-                SourceLineNumber = lineNumber,
+                Value = header.Value,
+                Name = header.PropertyName,
+                SourceLineNumber = header.LineNumber,
             };
-        }
-        
-        private bool TryReadLine([NotNullWhen(true)] out string? line)
-        {
-            var nextLine = _stringReader.ReadLine();
-            line = nextLine;
-
-            if (line == null)
-            {
-                return false;
-            }
             
-            _lineNumber++;
-            return true;
+            result.Add(header.PropertyName, property);
         }
-    
-        private string GetRemainedString()
-        {
-            return _stringReader.ReadToEnd();
-        }
+
+        return result;
     }
 }
