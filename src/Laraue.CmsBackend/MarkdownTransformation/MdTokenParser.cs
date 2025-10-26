@@ -157,7 +157,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         do
         {
             codeBlocks.AddRange(ReadInline());
-        } while (!CheckSequential(MdTokenType.Backtick, 3));
+        } while (!IsParseCompleted && !CheckSequential(MdTokenType.Backtick, 3));
         
         Advance(3);
         
@@ -295,30 +295,38 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
 
         while (!CheckSequential(MdTokenType.MinusSign, 3))
         {
-            // New lines doesn't matter here
+            // Empty header lines are acceptable, skip them
             Skip(MdTokenType.NewLine);
             
+            // Whitespaces before property name are acceptable
+            Skip(MdTokenType.Whitespace);
+            
+            // Property name is one word
             var property = Consume(MdTokenType.Word, "Excepted identifier");
             
+            // Whitespaces after property name are acceptable
             Skip(MdTokenType.Whitespace);
             Consume(MdTokenType.Delimiter, "Excepted delimiter");
+            
+            // Whitespaces before property value are acceptable
             Skip(MdTokenType.Whitespace);
             
             var headerValue = ConsumeHeaderValue();
-            Skip(MdTokenType.Whitespace);
-            var token = Consume(MdTokenType.NewLine, "New line after property definition excepted");
             
             result.Add(new MdHeader
             {
                 PropertyName = property.Lexeme!,
                 Value = headerValue,
-                LineNumber = token.LineNumber,
+                LineNumber = property.LineNumber,
             });
         }
         
         Advance(3);
         Skip(MdTokenType.Whitespace);
-        Consume(MdTokenType.NewLine, "New line after headers section excepted");
+        
+        // Require new line after header definition
+        if (!IsParseCompleted)
+            Consume(MdTokenType.NewLine, "New line after headers section excepted");
         
         return result.ToArray();
     }
@@ -328,34 +336,47 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         if (!Check(MdTokenType.StartArray))
         {
             var sb = new StringBuilder();
-            
-            while (!IsParseCompleted && !Check(MdTokenType.NewLine))
+            var elements = GetTrimmedLineElements();
+            foreach (var element in elements.OfType<PlainElement>())
             {
-                var value = Advance()!;
-                sb.Append(value.Lexeme);
+                sb.Append(element.Source.Lexeme);
             }
-
+            
             return sb.ToString();
         }
 
         Advance();
         var values = new List<string>();
         
-        while (!IsParseCompleted && !Check(MdTokenType.EndArray) && !Check(MdTokenType.NewLine))
+        while (true)
         {
-            var sb = new StringBuilder();
-            while (!IsParseCompleted && !Match(MdTokenType.Comma) && !Check(MdTokenType.EndArray) && !Check(MdTokenType.NewLine))
-            {
-                var value = Advance()!;
-                sb.Append(value.Lexeme);
-            }
+            // Skip each element whitespaces at the line begin
+            Skip(MdTokenType.Whitespace);
             
+            var sb = new StringBuilder();
+            
+            // Get all line elements until comma or array end meets, add met elements as plain string to the result array
+            var elements = GetTrimmedLineElements(MdTokenType.Comma, MdTokenType.EndArray);
+            foreach (var element in elements.OfType<PlainElement>())
+                sb.Append(element.Source.Lexeme);
             values.Add(sb.ToString());
+            
+            var lastToken = Previous();
+            switch (lastToken.TokenType)
+            {
+                case MdTokenType.EndArray:
+                    // Array is finished, ensure no tokens more defined
+                    Skip(MdTokenType.Whitespace);
+                    Consume(MdTokenType.NewLine, "New line after header section excepted");
+                    return values.ToArray();
+                    // Continue elements scan
+                case MdTokenType.Comma:
+                    continue;
+                default:
+                    // Array was started but not finished
+                    throw Error(lastToken, "Excepted end of array list");
+            }
         }
-        
-        Consume(MdTokenType.EndArray, "Excepted end of array list");
-        
-        return values.ToArray();
     }
 }
 

@@ -81,18 +81,49 @@ hi";
 
         Assert.Equal("<h1 id=\"hello-world\">Hello World</h1>", ToHtml(contentText));
     }
+    
+    [Fact]
+    public void Headers_ShouldBeProcessed_Always()
+    {
+        var contentText = @"---
+tags: [.NET, library]
+name: Alex
+---";
+
+        var headers = GetHeaders(contentText);
+        Assert.Equal(2, headers.Length);
+        
+        Assert.Equal("tags", headers[0].PropertyName);
+        Assert.Equal(new[] { ".NET", "library" }, headers[0].Value);
+        
+        Assert.Equal("name", headers[1].PropertyName);
+        Assert.Equal("Alex", headers[1].Value);
+    }
 
     private string ToHtml(string content)
     {
         var scanner = new MdTokenScanner(content);
         var scanResult = scanner.ScanTokens();
-        scanResult.ThrowOnAny();
-            
+        scanResult.ThrowOnAnyError();
+        
         var parser = new MdTokenParser(scanResult.Tokens);
         var parseResult = parser.Parse();
-        parseResult.ThrowOnAny();
+        parseResult.ThrowOnAnyError();
 
         var transformer = new MarkdownToHtmlTransformer();
         return transformer.Transform(parseResult.Result!);
+    }
+    
+    private MdHeader[] GetHeaders(string content)
+    {
+        var scanner = new MdTokenScanner(content);
+        var scanResult = scanner.ScanTokens();
+        scanResult.ThrowOnAnyError();
+        
+        var parser = new MdTokenParser(scanResult.Tokens);
+        var parseResult = parser.Parse();
+        parseResult.ThrowOnAnyError();
+        
+        return parseResult.Result!.Headers;
     }
 }

@@ -37,11 +37,11 @@ public class MarkdownParser(
         {
             var scanner = new MdTokenScanner(contentProperties.Markdown);
             var scanResult = scanner.ScanTokens();
-            scanResult.ThrowOnAny();
+            scanResult.ThrowOnAnyError();
             
             var parser = new MdTokenParser(scanResult.Tokens);
             var parseResult = parser.Parse();
-            parseResult.ThrowOnAny();
+            parseResult.ThrowOnAnyError();
 
             var content = contentProperties.Markdown;
             
