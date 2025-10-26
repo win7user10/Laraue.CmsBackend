@@ -15,7 +15,7 @@ public sealed class ParsedMdFile
 public sealed record ParsedMdFileProperty
 {
     public required string Name { get; init; }
-    public required string Value { get; init; }
+    public required object? Value { get; init; }
     public int SourceLineNumber { get; init; }
 }
 

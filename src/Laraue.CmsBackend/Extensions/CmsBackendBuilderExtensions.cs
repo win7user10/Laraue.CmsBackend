@@ -34,13 +34,13 @@ public static class CmsBackendBuilderExtensions
             }
             catch (MarkdownParserException e)
             {
-                errors.Add(new AddContentFolderFileException($"Error while adding file '{filePath}'", e));
+                errors.Add(new AddContentFolderFileException($"'{filePath}'", e));
             }
         }
 
         if (errors.Count != 0)
         {
-            throw new AggregateException($"Folder '{path}' content adding finished with errors", errors);
+            throw new AggregateException($"Folder '{path}' has content with errors", errors);
         }
         
         return builder;

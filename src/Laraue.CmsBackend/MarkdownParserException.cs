@@ -1,12 +1,11 @@
-﻿namespace Laraue.CmsBackend;
+﻿using Laraue.Interpreter.Common;
+
+namespace Laraue.CmsBackend;
 
 public class MarkdownParserException : Exception
 {
-    public int LineNumber { get; }
-    
-    public MarkdownParserException(string message, int lineNumber)
-        : base(message)
+    public MarkdownParserException(string message, CompileException exception)
+        : base(message, exception)
     {
-        LineNumber = lineNumber;
     }
 }

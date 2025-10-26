@@ -174,7 +174,7 @@ hi2";
                 {
                     Property = "length(content)",
                     Operator = FilterOperator.Equals,
-                    Value = 11
+                    Value = 10
                 }
             ],
             Pagination = GetDefaultPagination(),
@@ -194,7 +194,7 @@ hi2";
                 {
                     Property = "length(content)",
                     Operator = FilterOperator.More,
-                    Value = 11
+                    Value = 9
                 }
             ],
             Pagination = GetDefaultPagination(),
@@ -215,7 +215,7 @@ hi2";
                 {
                     Property = "length(content)",
                     Operator = FilterOperator.Less,
-                    Value = 12
+                    Value = 10
                 }
             ],
             Pagination = GetDefaultPagination(),
@@ -255,7 +255,7 @@ hi2";
             Properties = ["length(content)"]
         });
         
-        Assert.Equal(11, result["length"]);
+        Assert.Equal(9, result["length"]);
     }
     
     [Fact]

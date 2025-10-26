@@ -85,20 +85,29 @@ public class MarkdownProcessor : IMarkdownProcessor
     }
 
     private static object? Parse(
-        string value,
+        object? value,
         ContentTypePropertyType type,
         bool isArray)
     {
+        if (value == null)
+        {
+            return null;
+        }
+        
         if (isArray)
         {
-            if (!value.StartsWith('[') || !value.EndsWith(']'))
+            if (value is not string[] arrayParts)
             {
-                return null;
+                throw new InvalidOperationException();
             }
             
-            var arrayParts = value[1..^1].Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
             var result = arrayParts.Select(part => Parse(part, type, false)).ToArray();
             return result.Any(i => i == null) ? null : result;
+        }
+
+        if (value is not string stringValue)
+        {
+            throw new InvalidOperationException();
         }
         
         switch (type)
@@ -106,11 +115,11 @@ public class MarkdownProcessor : IMarkdownProcessor
             case ContentTypePropertyType.String:
                 return value;
             case ContentTypePropertyType.Number:
-                return int.TryParse(value, out var intValue) ? intValue : null;
+                return int.TryParse(stringValue, out var intValue) ? intValue : null;
             case ContentTypePropertyType.DateTime:
-                return DateTime.TryParse(value, out var dateTime) ? dateTime : null;
+                return DateTime.TryParse(stringValue, out var dateTime) ? dateTime : null;
             case ContentTypePropertyType.Float:
-                return double.TryParse(value, out var doubleValue) ? doubleValue : null;
+                return double.TryParse(stringValue, out var doubleValue) ? doubleValue : null;
             default:
                 throw new InvalidOperationException();
         }
