@@ -96,9 +96,9 @@ var limit = 10;
     [Fact]
     public void Link_ShouldBeRendered_Always()
     {
-        var contentText = "[Google](https://google.com)";
+        var contentText = "The [link](https://google.com/page1.html) inside text"; 
 
-        Assert.Equal("<p><a href=\"https://google.com\">Google</a></p>", ToHtml(contentText));
+        Assert.Equal("<p>The <a href=\"https://google.com/page1.html\">link</a> inside text</p>", ToHtml(contentText));
     }
     
     [Fact]

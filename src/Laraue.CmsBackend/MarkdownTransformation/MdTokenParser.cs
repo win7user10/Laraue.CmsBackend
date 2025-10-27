@@ -226,64 +226,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     // Read one block once then group them
     private PlainBlock ReadPlain()
     {
-        return new PlainBlock(ReadImageElements());
-    }
-
-    private MdElement[] ReadImageElements()
-    {
-        if (CheckSequential(MdTokenType.Not, MdTokenType.LeftSquareBracket))
-        {
-            Advance(2);
-            
-            var possibleAltText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
-            if (Previous().TokenType == MdTokenType.NewLine)
-            {
-                return possibleAltText;
-            }
-
-            if (!Match(MdTokenType.LeftParenthesis))
-            {
-                return possibleAltText;
-            }
-            
-            var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis, MdTokenType.Quote);
-            var possibleTitle = Array.Empty<MdElement>();
-            if (Previous().TokenType == MdTokenType.Quote)
-            {
-                possibleTitle = GetTrimmedLineElements(MdTokenType.Quote);
-            }
-
-            _ = GetTrimmedLineElements(MdTokenType.RightParenthesis);
-            
-            
-            var link = new ImageElement(possibleTitle, possibleHref, possibleAltText);
-            return ReadInlineElements().Prepend(link).ToArray();
-        }
-        
-        return ReadLinkElements();
-    }
-    
-    private MdElement[] ReadLinkElements()
-    {
-        if (Match(MdTokenType.LeftSquareBracket))
-        {
-            var possibleTitleText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
-            if (Previous().TokenType == MdTokenType.NewLine)
-            {
-                return possibleTitleText;
-            }
-
-            if (!Match(MdTokenType.LeftParenthesis))
-            {
-                return possibleTitleText;
-            }
-            
-            var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis);
-            var link = new LinkElement(possibleTitleText, possibleHref);
-            return ReadInlineElements().Prepend(link).ToArray();
-        }
-        
-        return ReadInlineElements();
+        return new PlainBlock(ReadInlineElements());
     }
     
     private MdElement[] ReadInlineElements()
@@ -291,6 +234,18 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         var result = new List<MdElement>();
         do
         {
+            if (Check(MdTokenType.LeftSquareBracket))
+            {
+                result.AddRange(ReadLinkElements());
+                return result.ToArray();
+            }
+
+            if (CheckSequential(MdTokenType.Not, MdTokenType.LeftSquareBracket))
+            {
+                result.AddRange(ReadImageElements());
+                return result.ToArray();
+            }
+            
             var next = ReadInlineElement();
             if (next != null)
             {
@@ -303,6 +258,55 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         } while (!IsParseCompleted && !Match(MdTokenType.LineBreak, MdTokenType.NewLine));
         
         return result.ToArray();
+    }
+    
+    private MdElement[] ReadLinkElements()
+    {
+        Advance(1);
+        
+        var possibleTitleText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
+        if (Previous().TokenType == MdTokenType.NewLine)
+        {
+            return possibleTitleText;
+        }
+
+        if (!Match(MdTokenType.LeftParenthesis))
+        {
+            return possibleTitleText;
+        }
+            
+        var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis);
+        var link = new LinkElement(possibleTitleText, possibleHref);
+        return ReadInlineElements().Prepend(link).ToArray();
+    }
+
+    private MdElement[] ReadImageElements()
+    {
+        Advance(2);
+            
+        var possibleAltText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
+        if (Previous().TokenType == MdTokenType.NewLine)
+        {
+            return possibleAltText;
+        }
+
+        if (!Match(MdTokenType.LeftParenthesis))
+        {
+            return possibleAltText;
+        }
+            
+        var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis, MdTokenType.Quote);
+        var possibleTitle = Array.Empty<MdElement>();
+        if (Previous().TokenType == MdTokenType.Quote)
+        {
+            possibleTitle = GetTrimmedLineElements(MdTokenType.Quote);
+        }
+
+        _ = GetTrimmedLineElements(MdTokenType.RightParenthesis);
+            
+            
+        var link = new ImageElement(possibleTitle, possibleHref, possibleAltText);
+        return ReadInlineElements().Prepend(link).ToArray();
     }
 
     private MdElement? ReadInlineElement()
