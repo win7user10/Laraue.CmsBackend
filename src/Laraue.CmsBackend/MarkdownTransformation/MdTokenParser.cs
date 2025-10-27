@@ -144,7 +144,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         Advance(3);
         
         // Read code block
-        var codeBlocks = new List<ContentBlock>();
+        var codeBlocks = new List<MdElement>();
         string? language = null;
 
         if (Match(MdTokenType.Word))
@@ -153,13 +153,28 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         }
         
         Consume(MdTokenType.NewLine, "Excepted new line after code block definition");
-        
-        do
+
+        while (!IsParseCompleted)
         {
-            codeBlocks.AddRange(ReadInline());
-        } while (!IsParseCompleted && !CheckSequential(MdTokenType.Backtick, 3));
+            codeBlocks.AddRange(GetTrimmedLineElements(MdTokenType.Backtick));
+            var previous = Previous();
+            
+            var requiredBackticks = previous.TokenType == MdTokenType.Backtick ? 2 : 3;
+            if (CheckSequential(MdTokenType.Backtick, requiredBackticks))
+            {
+                Advance(requiredBackticks);
+                break;
+            }
+            
+            // Handle all new lines in code block before block finish met
+            if (previous.TokenType == MdTokenType.NewLine)
+            {
+                codeBlocks.Add(new PlainElement(previous));
+            }
+        }
         
-        Advance(3);
+        if (!IsParseCompleted)
+            Consume(MdTokenType.NewLine, "Excepted new line after code block finished");
         
         return new CodeBlock(language, codeBlocks.ToArray());
     }
@@ -190,7 +205,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     {
         if (!CheckSequential(MdTokenType.MinusSign, MdTokenType.Whitespace))
         {
-            return ReadInline();
+            return ReadPlain();
         }
         
         // Read unordered list
@@ -209,9 +224,66 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     }
     
     // Read one block once then group them
-    private PlainBlock ReadInline()
+    private PlainBlock ReadPlain()
     {
-        return new PlainBlock(ReadInlineElements());
+        return new PlainBlock(ReadImageElements());
+    }
+
+    private MdElement[] ReadImageElements()
+    {
+        if (CheckSequential(MdTokenType.Not, MdTokenType.LeftSquareBracket))
+        {
+            Advance(2);
+            
+            var possibleAltText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
+            if (Previous().TokenType == MdTokenType.NewLine)
+            {
+                return possibleAltText;
+            }
+
+            if (!Match(MdTokenType.LeftParenthesis))
+            {
+                return possibleAltText;
+            }
+            
+            var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis, MdTokenType.Quote);
+            var possibleTitle = Array.Empty<MdElement>();
+            if (Previous().TokenType == MdTokenType.Quote)
+            {
+                possibleTitle = GetTrimmedLineElements(MdTokenType.Quote);
+            }
+
+            _ = GetTrimmedLineElements(MdTokenType.RightParenthesis);
+            
+            
+            var link = new ImageElement(possibleTitle, possibleHref, possibleAltText);
+            return ReadInlineElements().Prepend(link).ToArray();
+        }
+        
+        return ReadLinkElements();
+    }
+    
+    private MdElement[] ReadLinkElements()
+    {
+        if (Match(MdTokenType.LeftSquareBracket))
+        {
+            var possibleTitleText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
+            if (Previous().TokenType == MdTokenType.NewLine)
+            {
+                return possibleTitleText;
+            }
+
+            if (!Match(MdTokenType.LeftParenthesis))
+            {
+                return possibleTitleText;
+            }
+            
+            var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis);
+            var link = new LinkElement(possibleTitleText, possibleHref);
+            return ReadInlineElements().Prepend(link).ToArray();
+        }
+        
+        return ReadInlineElements();
     }
     
     private MdElement[] ReadInlineElements()
@@ -229,7 +301,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
                 break;
             }
         } while (!IsParseCompleted && !Match(MdTokenType.LineBreak, MdTokenType.NewLine));
-
+        
         return result.ToArray();
     }
 
@@ -333,7 +405,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
 
     private object? ConsumeHeaderValue()
     {
-        if (!Check(MdTokenType.StartArray))
+        if (!Check(MdTokenType.LeftSquareBracket))
         {
             var sb = new StringBuilder();
             var elements = GetTrimmedLineElements();
@@ -356,7 +428,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             var sb = new StringBuilder();
             
             // Get all line elements until comma or array end meets, add met elements as plain string to the result array
-            var elements = GetTrimmedLineElements(MdTokenType.Comma, MdTokenType.EndArray);
+            var elements = GetTrimmedLineElements(MdTokenType.Comma, MdTokenType.RightSquareBracket);
             foreach (var element in elements.OfType<PlainElement>())
                 sb.Append(element.Source.Lexeme);
             values.Add(sb.ToString());
@@ -364,7 +436,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             var lastToken = Previous();
             switch (lastToken.TokenType)
             {
-                case MdTokenType.EndArray:
+                case MdTokenType.RightSquareBracket:
                     // Array is finished, ensure no tokens more defined
                     Skip(MdTokenType.Whitespace);
                     Consume(MdTokenType.NewLine, "New line after header section excepted");
@@ -395,7 +467,7 @@ public class MdHeader
 
 public record MdHeaderValue(object? Value);
 public abstract record ContentBlock;
-public record CodeBlock(string? Language, ContentBlock[] Elements) : ContentBlock;
+public record CodeBlock(string? Language, MdElement[] Elements) : ContentBlock;
 public record OrderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
 public record UnorderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
 public record ContentWithIdent(int Ident, MdElement[] Elements);
@@ -443,6 +515,8 @@ public record PlainElement(Token<MdTokenType> Source) : MdElement
     }
 }
 
+public record LinkElement(MdElement[] Title, MdElement[] Href) : MdElement;
+public record ImageElement(MdElement[] Title, MdElement[] Href, MdElement[] Alt) : MdElement;
 public record BoldAsUnderscoreElement : MdElement;
 public record BoldAsAsteriskElement : MdElement;
 public record ItalicAsUnderscoreElement : MdElement;

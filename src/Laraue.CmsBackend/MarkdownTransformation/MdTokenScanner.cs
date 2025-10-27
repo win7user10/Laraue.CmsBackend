@@ -46,13 +46,22 @@ public class MdTokenScanner(string input)
                 AddToken(MdTokenType.Dot);
                 return true;
             case '[':
-                AddToken(MdTokenType.StartArray);
+                AddToken(MdTokenType.LeftSquareBracket);
+                return true;
+            case ']':
+                AddToken(MdTokenType.RightSquareBracket);
+                return true;
+            case '(':
+                AddToken(MdTokenType.LeftParenthesis);
+                return true;
+            case ')':
+                AddToken(MdTokenType.RightParenthesis);
+                return true;
+            case '/':
+                AddToken(MdTokenType.Slash);
                 return true;
             case ':':
                 AddToken(MdTokenType.Delimiter);
-                return true;
-            case ']':
-                AddToken(MdTokenType.EndArray);
                 return true;
             case ',':
                 AddToken(MdTokenType.Comma);
@@ -65,6 +74,12 @@ public class MdTokenScanner(string input)
                 return true;
             case '|':
                 AddToken(MdTokenType.Pipe);
+                return true;
+            case '!':
+                AddToken(MdTokenType.Not);
+                return true;
+            case '"':
+                AddToken(MdTokenType.Quote);
                 return true;
             case '_':
                 AddToken(PopNextCharIf(c => c == '_') ? MdTokenType.DoubleUnderscore : MdTokenType.Underscore);
@@ -125,12 +140,22 @@ public enum MdTokenType
     /// <summary>
     /// '['
     /// </summary>
-    StartArray,
+    LeftSquareBracket,
     
     /// <summary>
     /// ']'
     /// </summary>
-    EndArray,
+    RightSquareBracket,
+    
+    /// <summary>
+    /// '('
+    /// </summary>
+    LeftParenthesis,
+    
+    /// <summary>
+    /// ')'
+    /// </summary>
+    RightParenthesis,
     
     /// <summary>
     /// '-'
@@ -161,6 +186,11 @@ public enum MdTokenType
     /// '(\w\d)+'
     /// </summary>
     Word,
+    
+    /// <summary>
+    /// '/'
+    /// </summary>
+    Slash,
     
     /// <summary>
     /// ':'
@@ -196,4 +226,14 @@ public enum MdTokenType
     /// '|'
     /// </summary>
     Pipe,
+    
+    /// <summary>
+    /// '!'
+    /// </summary>
+    Not,
+    
+    /// <summary>
+    /// '"'
+    /// </summary>
+    Quote,
 }

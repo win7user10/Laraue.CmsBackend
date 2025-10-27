@@ -83,6 +83,33 @@ hi";
     }
     
     [Fact]
+    public void CodeBlock_ShouldBeRendered_Always()
+    {
+        var contentText = @"```csharp
+var age = 12;
+var limit = 10;
+```";
+
+        Assert.Equal("<pre><code class=\"csharp\">var age = 12;\r\nvar limit = 10;</code></pre>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void Link_ShouldBeRendered_Always()
+    {
+        var contentText = "[Google](https://google.com)";
+
+        Assert.Equal("<p><a href=\"https://google.com\">Google</a></p>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void Image_ShouldBeRendered_Always()
+    {
+        var contentText = "![Big mountain](/assets/mountain.jpg \"Everest\")";
+
+        Assert.Equal("<p><img src=\"/assets/mountain.jpg\" title=\"Everest\" alt=\"Big mountain\" /></p>", ToHtml(contentText));
+    }
+    
+    [Fact]
     public void Headers_ShouldBeProcessed_Always()
     {
         var contentText = @"---

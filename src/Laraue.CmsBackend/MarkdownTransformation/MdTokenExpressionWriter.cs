@@ -108,7 +108,7 @@ public  class MdTokenExpressionWriter
         
         Write(sb, codeBlock.Elements);
         
-        sb.AppendLine("</code></pre>");
+        sb.Append("</code></pre>");
     }
     
     private void Write(StringBuilder sb, PlainBlock plainBlock)
@@ -133,6 +133,12 @@ public  class MdTokenExpressionWriter
             case PlainElement plainElement:
                 Write(sb, plainElement);
                 break;
+            case LinkElement linkElement:
+                Write(sb, linkElement);
+                break;
+            case ImageElement imageElement:
+                Write(sb, imageElement);
+                break;
             case BoldAsUnderscoreElement:
             case BoldAsAsteriskElement:
                 WritePairTag(sb, "b", element);
@@ -145,6 +151,45 @@ public  class MdTokenExpressionWriter
                 WritePairTag(sb, "code", element);
                 break;
         }
+    }
+    
+    private void Write(StringBuilder sb, LinkElement linkElement)
+    {
+        sb.Append("<a href=\"");
+        foreach (var mdElement in linkElement.Href)
+        {
+            Write(sb, mdElement);
+        }
+
+        sb.Append("\">");
+        foreach (var mdElement in linkElement.Title)
+        {
+            Write(sb, mdElement);
+        }
+
+        sb.Append("</a>");
+    }
+    
+    private void Write(StringBuilder sb, ImageElement imageElement)
+    {
+        sb.Append("<img src=\"");
+        foreach (var mdElement in imageElement.Href)
+        {
+            Write(sb, mdElement);
+        }
+
+        sb.Append("\" title=\"");
+        foreach (var mdElement in imageElement.Title)
+        {
+            Write(sb, mdElement);
+        }
+
+        sb.Append("\" alt=\"");
+        foreach (var mdElement in imageElement.Alt)
+        {
+            Write(sb, mdElement);
+        }
+        sb.Append("\" />");
     }
     
     private void Write(StringBuilder sb, TableBlock tableBlock)
@@ -205,7 +250,7 @@ public  class MdTokenExpressionWriter
         {
             MdTokenType.Word => plainElement.Source.Literal,
             MdTokenType.LineBreak => Environment.NewLine,
-            MdTokenType.Whitespace => " ",
+            MdTokenType.NewLine => Environment.NewLine,
             _ => plainElement.Source.Lexeme
         };
         
