@@ -17,24 +17,7 @@ public class MdTokenScanner(string input)
                 }
                 return true;
             case ' ':
-                if (!PopNextCharIf(c => c == ' '))
-                {
-                    AddToken(MdTokenType.Whitespace);   // ' '
-                    return true;
-                }
-                if (!PopNextCharIf(c => c == ' '))
-                {
-                    AddToken(MdTokenType.LineBreak); // '  '
-                    return true;
-                }
-                if (!PopNextCharIf(c => c == ' '))
-                {
-                    AddToken(MdTokenType.Whitespace); // '   '
-                    AddToken(MdTokenType.LineBreak);
-                    return true;
-                }
-                
-                AddToken(MdTokenType.Ident); // '    '
+                AddToken(MdTokenType.Whitespace);
                 return true;
             case '*':
                 AddToken(PopNextCharIf(c => c == '*') ? MdTokenType.DoubleAsterisk : MdTokenType.Asterisk);
@@ -166,16 +149,6 @@ public enum MdTokenType
     /// ' '
     /// </summary>
     Whitespace,
-    
-    /// <summary>
-    /// '  '
-    /// </summary>
-    LineBreak,
-    
-    /// <summary>
-    /// '    '
-    /// </summary>
-    Ident,
     
     /// <summary>
     /// '\r\n'

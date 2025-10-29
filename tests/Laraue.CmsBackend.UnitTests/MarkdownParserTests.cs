@@ -39,7 +39,28 @@ hi";
     }
     
     [Fact]
-    public void OrderedLists_ShouldBeRendered_Always()
+    public void Tables_ShouldBeRendered_WhenHeadersMissing()
+    {
+        var contentText = @"|                   |                   |
+|-------------------|-------------------|
+| Cell 1 | Cell 2 | ";
+
+        Assert.Equal("<table><thead><tr><th></th><th></th></tr></thead><tbody><tr><td>Cell 1</td><td>Cell 2</td></tr></tbody></table>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void Tables_ShouldBeRenderedWithInlineItems_Always()
+    {
+        var contentText = @"| Name | Link      |
+| -- | -------- |
+| John | No link |
+| Henry | ![mountain](mountain.jpg) |";
+
+        Assert.Equal("<table><thead><tr><th>Name</th><th>Link</th></tr></thead><tbody><tr><td>John</td><td>No link</td></tr><tr><td>Henry</td><td><img src=\"mountain.jpg\" title=\"\" alt=\"mountain\" /></td></tr></tbody></table>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void OrderedLists_ShouldBeRendered_WhenStructureIsHierarchical()
     {
         var contentText = @"1. Item #1
 1. Item #2
@@ -49,7 +70,20 @@ hi";
     }
     
     [Fact]
-    public void UnorderedLists_ShouldBeRendered_Always()
+    public void OrderedLists_ShouldBeRendered_WhenContentIsMixed()
+    {
+        var contentText = @"1. Item #1
+Description
+1. Item #2
+
+## Heading
+And text";
+
+        Assert.Equal("<ol><li>Item #1 Description</li><li>Item #2</li></ol><h2 id=\"heading\">Heading</h2><p>And text</p>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void UnorderedLists_ShouldBeRendered_WhenStructureIsHierarchical()
     {
         var contentText = @"- Item #1
 - Item #2
@@ -75,11 +109,22 @@ hi";
     }
     
     [Fact]
-    public void Heading_ShouldBeRendered_Always()
+    public void BoldItems_ShouldBeRendered_WhenInsideLists()
     {
-        var contentText = "# Hello World";
+        var contentText = @"List title
+1. **First:** item
+2. **Second:** item";
+        
+        Assert.Equal("<p>List title</p><ol><li><b>First:</b> item</li><li><b>Second:</b> item</li></ol>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void Carries_ShouldBeRendered_Always()
+    {
+        var contentText = @"Hello guys,
+and girls";
 
-        Assert.Equal("<h1 id=\"hello-world\">Hello World</h1>", ToHtml(contentText));
+        Assert.Equal("<p>Hello guys, and girls</p>", ToHtml(contentText));
     }
     
     [Fact]
@@ -93,6 +138,22 @@ var limit = 10;
         Assert.Equal("<pre><code class=\"csharp\">var age = 12;\r\nvar limit = 10;</code></pre>", ToHtml(contentText));
     }
     
+    
+    [Fact]
+    public void NestedCodeBlocks_ShouldKeepFormatting_Always()
+    {
+        var contentText = @"```json
+[
+ [
+  ""Cell1"",
+  ""Cell2""
+ ]
+]
+```";
+
+        Assert.Equal("<pre><code class=\"json\">[\r\n [\r\n  \"Cell1\",\r\n  \"Cell2\"\r\n ]\r\n]</code></pre>", ToHtml(contentText));
+    }
+    
     [Fact]
     public void Link_ShouldBeRendered_Always()
     {
@@ -104,9 +165,19 @@ var limit = 10;
     [Fact]
     public void Image_ShouldBeRendered_Always()
     {
-        var contentText = "![Big mountain](/assets/mountain.jpg \"Everest\")";
+        var contentText = @"![Big mountain](/assets/mountain.jpg ""Everest"")
+![Small mountain](/assets/mini-mountain.jpg ""Elbrus"")";
 
-        Assert.Equal("<p><img src=\"/assets/mountain.jpg\" title=\"Everest\" alt=\"Big mountain\" /></p>", ToHtml(contentText));
+        Assert.Equal("<p><img src=\"/assets/mountain.jpg\" title=\"Everest\" alt=\"Big mountain\" /><img src=\"/assets/mini-mountain.jpg\" title=\"Elbrus\" alt=\"Small mountain\" /></p>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void BlocksAfterInlineElement_ShouldBeRendered_Always()
+    {
+        var contentText = @"![mountain](mountain.jpg)
+## Next title";
+
+        Assert.Equal("<p><img src=\"mountain.jpg\" title=\"\" alt=\"mountain\" /></p><h2 id=\"next-title\">Next title</h2>", ToHtml(contentText));
     }
     
     [Fact]

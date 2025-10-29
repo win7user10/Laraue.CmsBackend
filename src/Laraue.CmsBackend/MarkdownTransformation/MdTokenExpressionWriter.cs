@@ -5,6 +5,8 @@ namespace Laraue.CmsBackend.MarkdownTransformation;
 
 public  class MdTokenExpressionWriter
 {
+    private bool _keepFormatting = false;
+    
     public void Write(StringBuilder sb, MarkdownTree expression)
     {
         Write(sb, expression.Content);
@@ -105,8 +107,10 @@ public  class MdTokenExpressionWriter
         }
         
         sb.Append('>');
-        
+
+        _keepFormatting = true;
         Write(sb, codeBlock.Elements);
+        _keepFormatting = false;
         
         sb.Append("</code></pre>");
     }
@@ -246,12 +250,11 @@ public  class MdTokenExpressionWriter
     
     private void Write(StringBuilder sb, PlainElement plainElement)
     {
-        var value = plainElement.Source.TokenType switch
+        var value = plainElement.TokenType switch
         {
-            MdTokenType.Word => plainElement.Source.Literal,
-            MdTokenType.LineBreak => Environment.NewLine,
-            MdTokenType.NewLine => Environment.NewLine,
-            _ => plainElement.Source.Lexeme
+            MdTokenType.Word => plainElement.Literal,
+            MdTokenType.NewLine => _keepFormatting ? Environment.NewLine : "",
+            _ => plainElement.Lexeme
         };
         
         sb.Append(value);
