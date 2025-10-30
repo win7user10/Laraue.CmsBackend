@@ -201,6 +201,8 @@ name: Alex
 
     private string ToHtml(string content)
     {
+        content = content.Replace("\r\n", Environment.NewLine);
+        
         var scanner = new MdTokenScanner(content);
         var scanResult = scanner.ScanTokens();
         scanResult.ThrowOnAnyError();

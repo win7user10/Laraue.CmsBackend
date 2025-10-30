@@ -16,6 +16,10 @@ public class MdTokenScanner(string input)
                     ToNextLine();
                 }
                 return true;
+            case '\n':
+                AddToken(MdTokenType.NewLine);
+                ToNextLine();
+                return true;
             case ' ':
                 AddToken(MdTokenType.Whitespace);
                 return true;
