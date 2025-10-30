@@ -1,4 +1,6 @@
-﻿using System.Text;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Text;
 using Laraue.Interpreter.Parsing;
 using Laraue.Interpreter.Scanning;
 
@@ -29,18 +31,11 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             var block = ReadNewLineBlock();
             if (block is PlainBlock plainBlock && lastContentBlock is PlainBlock previousPlainBlock)
             {
-                // Add whitespaces after non whitespaced commas, dotc, etc.
-                if (previousPlainBlock.Elements.LastOrDefault() is PlainElement plainElement && _tokensToAddWhitespace.Contains(plainElement.TokenType.GetValueOrDefault()))
-                {
-                    previousPlainBlock.Elements = previousPlainBlock.Elements
-                        .Append(new PlainElement(MdTokenType.Whitespace, " "))
-                        .Concat(plainBlock.Elements)
-                        .ToArray();
-                }
-                else
-                {
-                    previousPlainBlock.Elements = previousPlainBlock.Elements.Concat(plainBlock.Elements).ToArray();
-                }
+                previousPlainBlock.Elements = previousPlainBlock.Elements
+                    .Append(new PlainElement(ParsedMdTokenType.NewLine))
+                    .Concat(plainBlock.Elements)
+                    .ToList()
+                    .Adjust();
             }
             else
             {
@@ -55,8 +50,6 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             Content = contentBlocks.ToArray(),
         };
     }
-
-    private readonly HashSet<MdTokenType> _tokensToAddWhitespace = [MdTokenType.Comma, MdTokenType.Dot];
 
     private ContentBlock ReadNewLineBlock()
     {
@@ -169,7 +162,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     {
         if (!MatchSequential(MdTokenType.Backtick, 3))
         {
-            return ReadOrderedList();
+            return ReadList();
         }
         
         // Read code block
@@ -188,7 +181,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             if (!MatchSequential(MdTokenType.NewLine, MdTokenType.Backtick, MdTokenType.Backtick, MdTokenType.Backtick))
             {
                 var next = ReadInlineElement();
-                codeBlocks.Add(next ?? new PlainElement(Previous()));
+                codeBlocks.Add(next ?? ToPlainElement(Previous()));
             }
             else
             {
@@ -202,11 +195,27 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         return new CodeBlock(language, codeBlocks.ToArray());
     }
     
-    private ContentBlock ReadOrderedList()
+    private ContentBlock ReadList()
     {
-        if (!MatchSequential(MdTokenType.Number, MdTokenType.Dot, MdTokenType.Whitespace))
+        if (ReadList([MdTokenType.Number, MdTokenType.Dot, MdTokenType.Whitespace], out var result))
         {
-            return ReadUnorderedList();
+            return new OrderedListBlock(result);
+        }
+
+        if (ReadList([MdTokenType.MinusSign, MdTokenType.Whitespace], out result))
+        {
+            return new UnorderedListBlock(result);
+        }
+        
+        return ReadPlain();
+    }
+
+    private bool ReadList(MdTokenType[] startListTokensSequence, [NotNullWhen(true)] out ContentWithIdent[]? result)
+    {
+        if (!MatchSequential(startListTokensSequence))
+        {
+            result = null;
+            return false;
         }
         
         // Read an ordered list
@@ -229,7 +238,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             // If new line found after new line, the list is finished
             if (Match(MdTokenType.NewLine))
             {
-                listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.ToArray()));
+                listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.Adjust()));
                 break;
             }
 
@@ -239,39 +248,18 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
                 nextIdent++;
             }
 
-            if (!CheckSequential(MdTokenType.Number, MdTokenType.Dot, MdTokenType.Whitespace) && !IsParseCompleted)
+            if (!CheckSequential(startListTokensSequence) && !IsParseCompleted)
             {
-                listItemElements.Add(new PlainElement(MdTokenType.Whitespace, " "));
+                listItemElements.Add(new PlainElement(ParsedMdTokenType.NewLine));
                 goto parseListItems;
             }
             
-            listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.ToArray()));
+            listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.Adjust()));
             
-        } while (!IsParseCompleted && MatchSequential(MdTokenType.Number, MdTokenType.Dot, MdTokenType.Whitespace));
+        } while (!IsParseCompleted && MatchSequential(startListTokensSequence));
         
-        return new OrderedListBlock(listBlocks.ToArray());
-    }
-
-    private ContentBlock ReadUnorderedList()
-    {
-        if (!CheckSequential(MdTokenType.MinusSign, MdTokenType.Whitespace))
-        {
-            return ReadPlain();
-        }
-        
-        // Read unordered list
-        var listBlocks = new List<ContentWithIdent>();
-        var nextIdent = 0;
-        do
-        {
-            Advance(2);
-            listBlocks.AddRange(new ContentWithIdent(nextIdent, ReadInlineElements(ReadInlineMode.StopOnNewLine | ReadInlineMode.StopOnWhitespace)));
-            nextIdent = 0;
-            while (MatchSequential(MdTokenType.Whitespace, 4))
-                nextIdent++;
-        } while (CheckSequential(MdTokenType.MinusSign, MdTokenType.Whitespace));
-        
-        return new UnorderedListBlock(listBlocks.ToArray());
+        result = listBlocks.ToArray();
+        return true;
     }
     
     // Read one block once then group them
@@ -368,6 +356,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         {
             possibleTitle = GetTrimmedLineElements(MdTokenType.Quote);
             GetTrimmedLineElements(MdTokenType.RightParenthesis);
+            GetTrimmedLineElements(); // Rude iteration to the end of line
         }
             
         var link = new ImageElement(possibleTitle, possibleHref, possibleAltText);
@@ -423,7 +412,20 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
     {
         return IsParseCompleted
             ? null
-            : new PlainElement(Advance());
+            : ToPlainElement(Advance());
+    }
+
+    private PlainElement ToPlainElement(Token<MdTokenType> token)
+    {
+        ParsedMdTokenType? type = token.TokenType switch
+        {
+            MdTokenType.NewLine => ParsedMdTokenType.NewLine,
+            MdTokenType.Whitespace => ParsedMdTokenType.Space,
+            null => null,
+            _ => ParsedMdTokenType.Word
+        };
+        
+        return new PlainElement(type, token.Literal ?? token.Lexeme);
     }
     
     private bool MatchSequential(MdTokenType tokenType, int count)
@@ -500,7 +502,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             var elements = GetTrimmedLineElements();
             foreach (var element in elements.OfType<PlainElement>())
             {
-                sb.Append(element.Lexeme);
+                sb.Append(element.Literal);
             }
             
             return sb.ToString();
@@ -519,7 +521,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             // Get all line elements until comma or array end meets, add met elements as plain string to the result array
             var elements = GetTrimmedLineElements(MdTokenType.Comma, MdTokenType.RightSquareBracket);
             foreach (var element in elements.OfType<PlainElement>())
-                sb.Append(element.Lexeme);
+                sb.Append(element.Literal);
             values.Add(sb.ToString());
             
             var lastToken = Previous();
@@ -598,27 +600,29 @@ public record TableCell(MdElement[] Elements)
 }
 public abstract record MdElement;
 
+[DebuggerDisplay("{TokenType} \"{ToString()}\"")]
 public record PlainElement : MdElement
 {
-    public MdTokenType? TokenType { get; }
-    public string? Lexeme { get; }
+    public ParsedMdTokenType? TokenType { get; }
     public object? Literal { get; }
 
-    public PlainElement(Token<MdTokenType> token) : this(token.TokenType, token.Lexeme, token.Literal)
-    {
-    }
-
-    public PlainElement(MdTokenType? tokenType, string? lexeme = null, object? literal = null)
+    public PlainElement(ParsedMdTokenType? tokenType, object? literal = null)
     {
         TokenType = tokenType;
-        Lexeme = lexeme;
         Literal = literal;
     }
     
     public override string ToString()
     {
-        return Literal?.ToString() ?? Lexeme ?? string.Empty;
+        return Literal?.ToString() ?? string.Empty;
     }
+}
+
+public enum ParsedMdTokenType
+{
+    NewLine,
+    Space,
+    Word,
 }
 
 public record LinkElement(MdElement[] Title, MdElement[] Href) : MdElement;

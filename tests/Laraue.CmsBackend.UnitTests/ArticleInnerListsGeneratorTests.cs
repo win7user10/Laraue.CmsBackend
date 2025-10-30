@@ -14,8 +14,8 @@ public class ArticleInnerListsGeneratorTests
         {
             Content =
             [
-                new HeadingBlock(1, [GetPlainElement(MdTokenType.Word, "Title")]),
-                new HeadingBlock(2, [GetPlainElement(MdTokenType.Word, "Subtitle")]),
+                new HeadingBlock(1, [GetPlainElement(ParsedMdTokenType.Word, "Title")]),
+                new HeadingBlock(2, [GetPlainElement(ParsedMdTokenType.Word, "Subtitle")]),
             ],
             Headers = []
         };
@@ -24,16 +24,8 @@ public class ArticleInnerListsGeneratorTests
         Assert.Equal(2, links.Count);
     }
 
-    private PlainElement GetPlainElement(MdTokenType tokenType, string literal)
+    private PlainElement GetPlainElement(ParsedMdTokenType tokenType, string literal)
     {
-        return new PlainElement(new Token<MdTokenType>()
-        {
-            TokenType = tokenType,
-            StartPosition = 1,
-            EndPosition = 2,
-            Lexeme = "",
-            Literal = literal,
-            LineNumber = 1,
-        });
+        return new PlainElement(tokenType, literal);
     }
 }

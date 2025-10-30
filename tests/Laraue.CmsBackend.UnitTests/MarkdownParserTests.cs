@@ -86,10 +86,11 @@ And text";
     public void UnorderedLists_ShouldBeRendered_WhenStructureIsHierarchical()
     {
         var contentText = @"- Item #1
-- Item #2
+- Item #2  
+Hi
     - Item #3";
 
-        Assert.Equal("<ul><li>Item #1</li><li>Item #2</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
+        Assert.Equal("<ul><li>Item #1</li><li>Item #2\r\nHi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
     }
     
     [Theory]

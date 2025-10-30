@@ -22,7 +22,7 @@ public class ArticleInnerLinksGenerator : IArticleInnerLinksGenerator
 
             foreach (var plainElement in headingBlock.Elements.OfType<PlainElement>())
             {
-                sb.Append(plainElement.Literal ?? plainElement.Lexeme);
+                sb.Append(plainElement.Literal);
             }
 
             var linkText = sb.ToString();
