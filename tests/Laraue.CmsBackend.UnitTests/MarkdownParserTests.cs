@@ -6,6 +6,8 @@ namespace Laraue.CmsBackend.UnitTests;
 
 public class MarkdownParserTests
 {
+    private static string _newLine = Environment.NewLine;
+    
     [Fact]
     public void Settings_ShouldNotBeInOutput_Always()
     {
@@ -90,7 +92,7 @@ And text";
 Hi
     - Item #3";
 
-        Assert.Equal("<ul><li>Item #1</li><li>Item #2\r\nHi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
+        Assert.Equal($"<ul><li>Item #1</li><li>Item #2{_newLine}Hi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
     }
     
     [Theory]
@@ -136,7 +138,7 @@ var age = 12;
 var limit = 10;
 ```";
 
-        Assert.Equal("<pre><code class=\"csharp\">var age = 12;\r\nvar limit = 10;</code></pre>", ToHtml(contentText));
+        Assert.Equal($"<pre><code class=\"csharp\">var age = 12;{_newLine}var limit = 10;</code></pre>", ToHtml(contentText));
     }
     
     
@@ -152,7 +154,7 @@ var limit = 10;
 ]
 ```";
 
-        Assert.Equal("<pre><code class=\"json\">[\r\n [\r\n  \"Cell1\",\r\n  \"Cell2\"\r\n ]\r\n]</code></pre>", ToHtml(contentText));
+        Assert.Equal($"<pre><code class=\"json\">[{_newLine} [{_newLine}  \"Cell1\",{_newLine}  \"Cell2\"{_newLine} ]{_newLine}]</code></pre>", ToHtml(contentText));
     }
     
     [Fact]
@@ -201,8 +203,6 @@ name: Alex
 
     private string ToHtml(string content)
     {
-        content = content.Replace("\\r\\n", Environment.NewLine);
-        
         var scanner = new MdTokenScanner(content);
         var scanResult = scanner.ScanTokens();
         scanResult.ThrowOnAnyError();
