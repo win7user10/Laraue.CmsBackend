@@ -7,7 +7,7 @@ namespace Laraue.CmsBackend;
 public interface ICmsBackendBuilder
 {
     ICmsBackendBuilder AddContent(ContentProperties properties);
-    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseDocumentType;
+    ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseContentType;
     ICmsBackendBuilder AddFunctionsSupport(Type functionsClass);
     ICmsBackend Build();
 }
@@ -26,7 +26,7 @@ public class CmsBackendBuilder : ICmsBackendBuilder
         _markdownParser = markdownParser;
         _markdownProcessor = markdownProcessor;
 
-        AddContentType<DefaultDocumentType>();
+        AddContentType<DefaultContentType>();
         AddFunctionsSupport(typeof(StringFunctions));
         AddFunctionsSupport(typeof(DateTimeFunctions));
     }
@@ -40,7 +40,7 @@ public class CmsBackendBuilder : ICmsBackendBuilder
         return this;
     }
 
-    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseDocumentType
+    public ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseContentType
     {
         _contentTypeRegistry.AddContentType<TContentType>();
         

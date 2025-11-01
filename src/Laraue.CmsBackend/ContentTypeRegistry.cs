@@ -10,7 +10,7 @@ public class ContentTypeRegistry
     private readonly Dictionary<string, ContentTypeSchema> _contentTypes = new ();
     public const string UndefinedContentType = "undefined";
     
-    public ContentTypeRegistry AddContentType<TContentType>() where TContentType : BaseDocumentType
+    public ContentTypeRegistry AddContentType<TContentType>() where TContentType : BaseContentType
     {
         var schema = GetSchema<TContentType>();
 
@@ -27,11 +27,11 @@ public class ContentTypeRegistry
         return _contentTypes.TryGetValue(id, out contentType);
     }
 
-    private ContentTypeSchema GetSchema<TContentType>() where TContentType : BaseDocumentType
+    private ContentTypeSchema GetSchema<TContentType>() where TContentType : BaseContentType
     {
         var type = typeof(TContentType);
 
-        var documentType = type.GetCustomAttribute<DocumentTypeAttribute>();
+        var documentType = type.GetCustomAttribute<ContentTypeAttribute>();
         var contentType = documentType != null
             ? documentType.ContentType
             : type.Name.ToCamelCase().ToString();

@@ -51,7 +51,7 @@ public  class MdTokenExpressionWriter
         sb.Append(Environment.NewLine);
     }
     
-    private void WriteListBlock(StringBuilder sb, string listTag, ContentWithIdent[] elements)
+    private void WriteListBlock(StringBuilder sb, string listTag, ElementsWithIdent[] elements)
     {
         var currentIdentLevel = -1;
         
@@ -248,12 +248,34 @@ public  class MdTokenExpressionWriter
     {
         var value = plainElement.TokenType switch
         {
-            ParsedMdTokenType.Word => plainElement.Literal,
+            ParsedMdTokenType.Word => plainElement.Literal?.ToString(),
             ParsedMdTokenType.NewLine => Environment.NewLine,
             ParsedMdTokenType.Space => " ",
             _ => throw new NotImplementedException(),
         };
+
+        if (value is null)
+        {
+            return;
+        }
+
+        foreach (var nextChar in value)
+        {
+            if (EscapedChars.TryGetValue(nextChar, out var escapedChar))
+            {
+                sb.Append(escapedChar);
+            }
+            else
+            {
+                sb.Append(nextChar);
+            }
+        }
         
-        sb.Append(value);
     }
+
+    private static readonly Dictionary<char, string> EscapedChars = new()
+    {
+        ['<'] = "&lt;",
+        ['>'] = "&gt;",
+    };
 }

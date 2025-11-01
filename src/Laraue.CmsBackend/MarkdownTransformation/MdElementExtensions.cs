@@ -26,6 +26,8 @@ public static class MdElementExtensions
     }
 
     private static readonly HashSet<string> TokensToAddWhitespace = [",", "."];
+
+    // It should be method that adjust all blocks in time and calls only on the parsing end
     public static MdElement[] Adjust(this IList<MdElement> elements)
     {
         var result = new List<MdElement>();

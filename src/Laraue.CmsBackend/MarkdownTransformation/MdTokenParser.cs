@@ -210,7 +210,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         return ReadPlain();
     }
 
-    private bool ReadList(MdTokenType[] startListTokensSequence, [NotNullWhen(true)] out ContentWithIdent[]? result)
+    private bool ReadList(MdTokenType[] startListTokensSequence, [NotNullWhen(true)] out ElementsWithIdent[]? result)
     {
         if (!MatchSequential(startListTokensSequence))
         {
@@ -219,7 +219,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         }
         
         // Read an ordered list
-        var listBlocks = new List<ContentWithIdent>();
+        var listBlocks = new List<ElementsWithIdent>();
         var nextIdent = 0;
 
         do
@@ -234,11 +234,16 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             
             // Read all tokens until the row end
             listItemElements.AddRange(ReadInlineElements(ReadInlineMode.StopOnNewLine));
+            if (Previous().TokenType == startListTokensSequence.Last())
+            {
+                listItemElements.Add(new PlainElement(ParsedMdTokenType.NewLine));
+                goto parseListItems;
+            }
             
             // If new line found after new line, the list is finished
             if (Match(MdTokenType.NewLine))
             {
-                listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.Adjust()));
+                listBlocks.Add(new ElementsWithIdent(currentIdent / 4, listItemElements.Adjust()));
                 break;
             }
 
@@ -254,7 +259,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
                 goto parseListItems;
             }
             
-            listBlocks.Add(new ContentWithIdent(currentIdent / 4, listItemElements.Adjust()));
+            listBlocks.Add(new ElementsWithIdent(currentIdent / 4, listItemElements.Adjust()));
             
         } while (!IsParseCompleted && MatchSequential(startListTokensSequence));
         
@@ -330,7 +335,7 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             
         var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis);
         var link = new LinkElement(possibleTitleText, possibleHref);
-        return ReadInlineElements(ReadInlineMode.StopOnNewLine | ReadInlineMode.StopOnWhitespace).Prepend(link).ToArray();
+        return [link];
     }
 
     private MdElement[] ReadImageElements()
@@ -556,12 +561,11 @@ public class MdHeader
     public required int LineNumber { get; set; }
 }
 
-public record MdHeaderValue(object? Value);
 public abstract record ContentBlock;
 public record CodeBlock(string? Language, MdElement[] Elements) : ContentBlock;
-public record OrderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
-public record UnorderedListBlock(ContentWithIdent[] Elements) : ContentBlock;
-public record ContentWithIdent(int Ident, MdElement[] Elements);
+public record OrderedListBlock(ElementsWithIdent[] Elements) : ContentBlock;
+public record UnorderedListBlock(ElementsWithIdent[] Elements) : ContentBlock;
+public record ElementsWithIdent(int Ident, MdElement[] Elements);
 public record HeadingBlock(int Level, MdElement[] Elements) : ContentBlock;
 
 public record PlainBlock : ContentBlock

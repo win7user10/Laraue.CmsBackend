@@ -1,6 +1,6 @@
 ﻿namespace Laraue.CmsBackend;
 
-public abstract class BaseDocumentType
+public abstract class BaseContentType
 {
     /// <summary>
     /// Document title (section 'title' of the md file). Add cause a lot of api requires this property.
@@ -9,11 +9,11 @@ public abstract class BaseDocumentType
 }
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]
-public class DocumentTypeAttribute : Attribute
+public class ContentTypeAttribute : Attribute
 {
     public string ContentType { get; }
 
-    public DocumentTypeAttribute(string contentType)
+    public ContentTypeAttribute(string contentType)
     {
         ContentType = contentType;
     }

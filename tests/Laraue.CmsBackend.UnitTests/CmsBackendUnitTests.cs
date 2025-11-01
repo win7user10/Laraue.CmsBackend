@@ -9,7 +9,7 @@ public class CmsBackendUnitTests
 {
     private readonly ICmsBackend _cmsBackend;
 
-    private class UnitTestArticle : BaseDocumentType
+    private class UnitTestArticle : BaseContentType
     {
         public required string[] Tags { get; set; }
         public required string Project { get; set; }

@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Laraue.CmsBackend.Contracts;
 using Laraue.CmsBackend.Funtions;
@@ -12,6 +13,7 @@ public interface ICmsBackend
 {
     Dictionary<string, object> GetEntity(GetEntityRequest request);
     IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request);
+    IShortPaginatedResult<T> GetEntities<T>(GetEntitiesRequest request) where T : class;
     List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request);
     List<SectionItem> GetSections(GetSectionsRequest request);
 }
@@ -103,6 +105,15 @@ public class CmsBackendUnit(
         return projectedSource.ShortPaginate(request);
     }
 
+    public IShortPaginatedResult<T> GetEntities<T>(GetEntitiesRequest request) where T : class
+    {
+        var entities = GetEntities(request);
+
+        var result = entities.MapTo<T, Dictionary<string, object>>(x => (T)GetObject(x, typeof(T)));
+        
+        return result;
+    }
+
     public List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request)
     {
         var source = registry.GetEntities(request.FromPath);
@@ -135,6 +146,27 @@ public class CmsBackendUnit(
         var subSections = registry.GetSubSections(request.FromPath ?? [], request.Depth);
 
         return subSections.Select(Map).ToList();
+    }
+
+    private static object GetObject(Dictionary<string, object> dict, Type type)
+    {
+        var obj = Activator.CreateInstance(type);
+
+        foreach (var kv in dict)
+        {
+            var prop = type.GetProperty(kv.Key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
+            if(prop == null) continue;
+
+            var value = kv.Value;
+            if (value is Dictionary<string, object> objects)
+            {
+                value = GetObject(objects, prop.PropertyType);
+            }
+
+            prop.SetValue(obj, value, null);
+        }
+        
+        return obj!;
     }
 
     private SectionItem Map(ProcessedMdFileRegistry.SubSectionItem sectionItem)

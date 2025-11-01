@@ -6,7 +6,7 @@ namespace Laraue.CmsBackend.UnitTests;
 
 public class MarkdownParserTests
 {
-    private static string _newLine = Environment.NewLine;
+    private static readonly string NewLine = Environment.NewLine;
     
     [Fact]
     public void Settings_ShouldNotBeInOutput_Always()
@@ -75,13 +75,13 @@ hi";
     public void OrderedLists_ShouldBeRendered_WhenContentIsMixed()
     {
         var contentText = @"1. Item #1
-Description
+Description [link](http://test.com)
 1. Item #2
 
 ## Heading
 And text";
 
-        Assert.Equal("<ol><li>Item #1 Description</li><li>Item #2</li></ol><h2 id=\"heading\">Heading</h2><p>And text</p>", ToHtml(contentText));
+        Assert.Equal("<ol><li>Item #1 Description <a href=\"http://test.com\">link</a></li><li>Item #2</li></ol><h2 id=\"heading\">Heading</h2><p>And text</p>", ToHtml(contentText));
     }
     
     [Fact]
@@ -92,7 +92,7 @@ And text";
 Hi
     - Item #3";
 
-        Assert.Equal($"<ul><li>Item #1</li><li>Item #2{_newLine}Hi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
+        Assert.Equal($"<ul><li>Item #1</li><li>Item #2{NewLine}Hi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
     }
     
     [Theory]
@@ -134,11 +134,11 @@ and girls";
     public void CodeBlock_ShouldBeRendered_Always()
     {
         var contentText = @"```csharp
-var age = 12;
-var limit = 10;
+var user = new User<Guid>();
+var html = ""<html><p class=""title"">Hi</html>""
 ```";
 
-        Assert.Equal($"<pre><code class=\"csharp\">var age = 12;{_newLine}var limit = 10;</code></pre>", ToHtml(contentText));
+        Assert.Equal($"<pre><code class=\"csharp\">var user = new User&lt;Guid&gt;();{NewLine}var html = \"&lt;html&gt;&lt;p class=\"title\"&gt;Hi&lt;/html&gt;\"</code></pre>", ToHtml(contentText));
     }
     
     
@@ -154,13 +154,14 @@ var limit = 10;
 ]
 ```";
 
-        Assert.Equal($"<pre><code class=\"json\">[{_newLine} [{_newLine}  \"Cell1\",{_newLine}  \"Cell2\"{_newLine} ]{_newLine}]</code></pre>", ToHtml(contentText));
+        Assert.Equal($"<pre><code class=\"json\">[{NewLine} [{NewLine}  \"Cell1\",{NewLine}  \"Cell2\"{NewLine} ]{NewLine}]</code></pre>", ToHtml(contentText));
     }
     
     [Fact]
     public void Link_ShouldBeRendered_Always()
     {
-        var contentText = "The [link](https://google.com/page1.html) inside text"; 
+        var contentText = @"The [link](https://google.com/page1.html)
+inside text"; 
 
         Assert.Equal("<p>The <a href=\"https://google.com/page1.html\">link</a> inside text</p>", ToHtml(contentText));
     }
