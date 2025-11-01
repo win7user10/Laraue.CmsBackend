@@ -1,10 +1,18 @@
-﻿using Laraue.Core.DataAccess.Contracts;
+﻿using System.Text;
+using System.Xml;
+using Laraue.Core.DataAccess.Contracts;
 
 namespace Laraue.CmsBackend;
 
 public interface ISitemapGenerator
 {
     SitemapItemDto[] GetItems();
+    string GenerateSitemap(GenerateSitemapRequest request, SitemapItemDto[] items);
+}
+
+public class GenerateSitemapRequest
+{
+    public string? BaseAddress { get; init; }
 }
 
 public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
@@ -26,6 +34,35 @@ public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
         
         return result.ToArray();
     }
+
+    public string GenerateSitemap(GenerateSitemapRequest request, SitemapItemDto[] items)
+    {
+        var sb = new StringBuilder();
+
+        sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
+        
+        foreach (var item in items)
+        {
+            sb
+                .Append("<url>")
+                .Append("<loc>");
+
+            if (request.BaseAddress != null)
+                sb.Append(request.BaseAddress);
+            
+            sb
+                .Append(item.Location)
+                .Append("</loc>")
+                .Append("<lastmod>")
+                .Append(XmlConvert.ToString(item.LastModified, XmlDateTimeSerializationMode.Utc))
+                .Append("</lastmod>")
+                .Append("</url>");
+        }
+        
+        sb.Append("</urlset>");
+
+        return sb.ToString();
+    }
 }
 
 public record GetEntitiesResult
@@ -35,4 +72,4 @@ public record GetEntitiesResult
     public required string[] Path { get; init; }
 }
 
-public record SitemapItemDto(string Loc, DateTime LastMod);
+public record SitemapItemDto(string Location, DateTime LastModified);
