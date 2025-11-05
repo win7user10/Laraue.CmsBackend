@@ -75,13 +75,13 @@ hi";
     public void OrderedLists_ShouldBeRendered_WhenContentIsMixed()
     {
         var contentText = @"1. Item #1
-Description [link](http://test.com)
+Description [link](http://test_1.com)
 1. Item #2
 
 ## Heading
 And text";
 
-        Assert.Equal("<ol><li>Item #1 Description <a href=\"http://test.com\">link</a></li><li>Item #2</li></ol><h2 id=\"heading\">Heading</h2><p>And text</p>", ToHtml(contentText));
+        Assert.Equal("<ol><li>Item #1 Description <a href=\"http://test_1.com\">link</a></li><li>Item #2</li></ol><h2 id=\"heading\">Heading</h2><p>And text</p>", ToHtml(contentText));
     }
     
     [Fact]

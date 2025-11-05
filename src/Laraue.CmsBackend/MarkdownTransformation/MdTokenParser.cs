@@ -323,19 +323,28 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
         Advance(1);
         
         var possibleTitleText = GetTrimmedLineElements(MdTokenType.RightSquareBracket);
-        if (Previous().TokenType == MdTokenType.NewLine)
+        if (Previous().TokenType == MdTokenType.NewLine || !Match(MdTokenType.LeftParenthesis))
         {
             return possibleTitleText;
         }
 
-        if (!Match(MdTokenType.LeftParenthesis))
+        var hrefElements = new List<MdElement>();
+        while(true)
         {
-            return possibleTitleText;
-        }
+            var nextElement = ReadPlainElement();
+            if (nextElement == null || nextElement.TokenType == ParsedMdTokenType.NewLine)
+            {
+                return possibleTitleText.Union(hrefElements).ToArray();
+            }
             
-        var possibleHref = GetTrimmedLineElements(MdTokenType.RightParenthesis);
-        var link = new LinkElement(possibleTitleText, possibleHref);
-        return [link];
+            if (nextElement.Literal is ")")
+            {
+                var link = new LinkElement(possibleTitleText, hrefElements.ToArray());
+                return [link];
+            }
+            
+            hrefElements.Add(nextElement);
+        }
     }
 
     private MdElement[] ReadImageElements()
