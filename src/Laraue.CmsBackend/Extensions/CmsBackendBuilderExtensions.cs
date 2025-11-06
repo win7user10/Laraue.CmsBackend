@@ -19,8 +19,6 @@ public static class CmsBackendBuilderExtensions
             var directorySegments = new FilePath(directoryName!.Split(Path.DirectorySeparatorChar));
             
             var fileContent = File.ReadAllText(filePath);
-            var modifiedAt = File.GetLastWriteTimeUtc(filePath);
-            var createdAt = File.GetCreationTimeUtc(filePath);
             
             try
             {
@@ -28,9 +26,7 @@ public static class CmsBackendBuilderExtensions
                     new ContentProperties(
                         fileContent,
                         directorySegments,
-                        fileName,
-                        createdAt,
-                        modifiedAt));
+                        fileName));
             }
             catch (MarkdownParserException e)
             {

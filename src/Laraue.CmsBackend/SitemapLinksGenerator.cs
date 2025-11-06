@@ -52,11 +52,16 @@ public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
             
             sb
                 .Append(item.Location)
-                .Append("</loc>")
-                .Append("<lastmod>")
-                .Append(XmlConvert.ToString(item.LastModified, XmlDateTimeSerializationMode.Utc))
-                .Append("</lastmod>")
-                .Append("</url>");
+                .Append("</loc>");
+
+            if (item.LastModified.HasValue)
+            {
+                sb.Append("<lastmod>")
+                    .Append(XmlConvert.ToString(item.LastModified.Value, XmlDateTimeSerializationMode.Utc))
+                    .Append("</lastmod>");
+            }
+                
+            sb.Append("</url>");
         }
         
         sb.Append("</urlset>");
@@ -67,9 +72,9 @@ public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
 
 public record GetEntitiesResult
 {
-    public DateTime UpdatedAt { get; init; }
+    public DateTime? UpdatedAt { get; init; }
     public required string FileName { get; init; }
     public required string[] Path { get; init; }
 }
 
-public record SitemapItemDto(string Location, DateTime LastModified);
+public record SitemapItemDto(string Location, DateTime? LastModified);

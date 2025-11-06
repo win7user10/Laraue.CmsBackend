@@ -63,8 +63,6 @@ public class MarkdownParser(
                 FileName = contentProperties.Id,
                 ContentType = contentType,
                 Content = content,
-                UpdatedAt = contentProperties.UpdatedAt,
-                CreatedAt = contentProperties.CreatedAt,
                 Properties = properties.Values,
                 Path = contentProperties.Path,
                 InnerLinks = links,

@@ -21,28 +21,28 @@ public class CmsBackendUnitTests
 tags: [tag1, tag2]
 project: project1
 type: unitTestArticle
+createdAt: 2020-01-01
+updatedAt: 2020-01-01
 ---
 hi";
         var content1 =  new ContentProperties(
             content1Text,
             new FilePath(["docs", "articles"]),
-            "article1",
-            new DateTime(2020, 01, 01),
-            new DateTime(2020, 01, 01));
+            "article1");
         
         var content2Text = @"---
 tags: [tag2, tag3]
 project: project2
 type: unitTestArticle
+createdAt: 2020-01-01
+updatedAt: 2020-01-02
 ---
 hi2";
         
         var content2 = new ContentProperties(
             content2Text,
             new FilePath(["docs", "articles"]),
-            "article2",
-            new DateTime(2020, 01, 01),
-            new DateTime(2020, 01, 02));
+            "article2");
         
         _cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(

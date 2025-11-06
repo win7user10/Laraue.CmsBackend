@@ -12,6 +12,12 @@ public static class ContentTypePropertyTypeExtensions
 {
     public static ContentTypePropertyType GetCmsPropertyType(this Type type)
     {
+        var nullableType = Nullable.GetUnderlyingType(type);
+        if (nullableType != null)
+        {
+            type = nullableType;
+        }
+        
         if (type == typeof(string))
         {
             return ContentTypePropertyType.String;

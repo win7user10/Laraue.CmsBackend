@@ -9,13 +9,16 @@ public class SitemapGeneratorTests
     
     public SitemapGeneratorTests()
     {
-        var content1Text = "hi";
+        var content1Text = @"
+---
+createdAt: 2020-01-01
+updatedAt: 2020-01-01
+---
+hi";
         var content1 =  new ContentProperties(
             content1Text,
             new FilePath(["docs", "articles"]),
-            "article1",
-            new DateTime(2020, 01, 01),
-            new DateTime(2020, 01, 01));
+            "article1");
         
         var cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(
