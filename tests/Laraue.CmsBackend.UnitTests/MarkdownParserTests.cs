@@ -90,9 +90,10 @@ And text";
         var contentText = @"- Item #1
 - Item #2  
 Hi
-    - Item #3";
+    - Item #3
+        - Item #4";
 
-        Assert.Equal($"<ul><li>Item #1</li><li>Item #2{NewLine}Hi</li><ul><li>Item #3</li></ul></ul>", ToHtml(contentText));
+        Assert.Equal($"<ul><li>Item #1</li><li>Item #2{NewLine}Hi</li><ul><li>Item #3</li><ul><li>Item #4</li></ul></ul></ul>", ToHtml(contentText));
     }
     
     [Theory]
@@ -128,6 +129,14 @@ Hi
 and girls";
 
         Assert.Equal("<p>Hello guys, and girls</p>", ToHtml(contentText));
+    }
+    
+    [Fact]
+    public void InlineCode_ShouldBeRendered_Always()
+    {
+        var contentText = "This is `string[] Tags` inline code";
+
+        Assert.Equal("<p>This is <code>string[] Tags</code> inline code</p>", ToHtml(contentText));
     }
     
     [Fact]

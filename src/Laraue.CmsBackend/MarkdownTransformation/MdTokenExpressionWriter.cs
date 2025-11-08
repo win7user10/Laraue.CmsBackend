@@ -147,8 +147,8 @@ public  class MdTokenExpressionWriter
             case ItalicAsUnderscoreElement:
                 WritePairTag(sb, "em", element);
                 break;
-            case InlineCodeElement:
-                WritePairTag(sb, "code", element);
+            case InlineCodeElement codeElement:
+                Write(sb, codeElement);
                 break;
         }
     }
@@ -168,6 +168,16 @@ public  class MdTokenExpressionWriter
         }
 
         sb.Append("</a>");
+    }
+
+    private void Write(StringBuilder sb, InlineCodeElement codeElement)
+    {
+        sb.Append("<code>");
+        foreach (var mdElement in codeElement.Elements)
+        {
+            Write(sb, mdElement);
+        }
+        sb.Append("</code>");
     }
     
     private void Write(StringBuilder sb, ImageElement imageElement)

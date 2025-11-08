@@ -389,7 +389,20 @@ public class MdTokenParser : TokenParser<MdTokenType, MarkdownTree>
             return ReadInlineBold();
         }
 
-        return new InlineCodeElement();
+        var elements = new List<MdElement>();
+        while (!Match(MdTokenType.Backtick))
+        {
+            var next = ReadPlainElement();
+            if (next != null && next.TokenType != ParsedMdTokenType.NewLine) // The common pattern for inline handling
+            {
+                elements.Add(next);
+                continue;
+            }
+            
+            break;
+        }
+        
+        return new InlineCodeElement(elements.ToArray());
     }
     
     private MdElement? ReadInlineBold()
@@ -644,4 +657,4 @@ public record BoldAsUnderscoreElement : MdElement;
 public record BoldAsAsteriskElement : MdElement;
 public record ItalicAsUnderscoreElement : MdElement;
 public record ItalicAsAsteriskElement : MdElement;
-public record InlineCodeElement : MdElement;
+public record InlineCodeElement(MdElement[] Elements) : MdElement;
