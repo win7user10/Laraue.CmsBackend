@@ -7,7 +7,7 @@
         <Description>The package to build api for the listed locally markdown files.</Description>
         <RepositoryType>git</RepositoryType>
         <Authors>Belyanskiy Ilya</Authors>
-        <Version>1.1.0</Version>
+        <Version>1.1.1</Version>
     </PropertyGroup>
 
     <ItemGroup>
