@@ -31,4 +31,9 @@ public class FilePath
     {
         return _stringValue.GetHashCode();
     }
+
+    public override string ToString()
+    {
+        return _stringValue;
+    }
 }

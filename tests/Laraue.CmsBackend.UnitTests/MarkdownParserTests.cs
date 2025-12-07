@@ -184,6 +184,14 @@ inside text";
         Assert.Equal("<p><img src=\"/assets/mountain.jpg\" title=\"Everest\" alt=\"Big mountain\" /><img src=\"/assets/mini-mountain.jpg\" title=\"Elbrus\" alt=\"Small mountain\" /></p>", ToHtml(contentText));
     }
     
+    [Fact(Skip = "Not implemented")]
+    public void ImageWithLink_ShouldBeRendered_Always()
+    {
+        var contentText = @"[![Big mountain](/assets/mountain.jpg ""Everest"")](http://link)";
+
+        Assert.Equal("<p><img src=\"/assets/mountain.jpg\" title=\"Everest\" alt=\"Big mountain\" /><img src=\"/assets/mini-mountain.jpg\" title=\"Elbrus\" alt=\"Small mountain\" /></p>", ToHtml(contentText));
+    }
+    
     [Fact]
     public void BlocksAfterInlineElement_ShouldBeRendered_Always()
     {

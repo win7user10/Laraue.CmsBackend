@@ -101,7 +101,6 @@ hi2";
         {
             Filters =
             [
-                new FilterRow { Property = "fileName", Value = "article2", Operator = FilterOperator.Equals },
                 new FilterRow { Property = "project", Value = "project2", Operator = FilterOperator.Equals },
             ],
             Pagination = GetDefaultPagination()

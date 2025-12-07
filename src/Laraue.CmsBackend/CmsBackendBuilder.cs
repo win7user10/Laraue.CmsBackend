@@ -91,8 +91,6 @@ public class CmsBackendException : Exception
                 .Append("Entity ")
                 .Append("path: '")
                 .Append(string.Join(Path.DirectorySeparatorChar, exceptionByEntity.Key.Path))
-                .Append("' name: '")
-                .Append(exceptionByEntity.Key.FileName)
                 .Append("' type '")
                 .Append(exceptionByEntity.Key.ContentType)
                 .Append('\'')

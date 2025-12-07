@@ -33,6 +33,8 @@ public class MarkdownParser(
         IArticleInnerLinksGenerator articleInnerLinksGenerator,
         ContentProperties contentProperties)
     {
+        private const string IndexFileName = "index";
+        
         public ParsedMdFile Parse()
         {
             var scanner = new MdTokenScanner(contentProperties.Markdown);
@@ -57,14 +59,17 @@ public class MarkdownParser(
             var contentType = properties.Remove("type", out var contentTypeProperty)
                 ? contentTypeProperty.Value?.ToString() ?? ContentTypeRegistry.UndefinedContentType
                 : ContentTypeRegistry.UndefinedContentType;
-        
+
+            var path = contentProperties.Id == IndexFileName
+                ? contentProperties.Path
+                : new FilePath(contentProperties.Path.Segments.Append(contentProperties.Id).ToArray());
+            
             return new ParsedMdFile
             {
-                FileName = contentProperties.Id,
                 ContentType = contentType,
                 Content = content,
                 Properties = properties.Values,
-                Path = contentProperties.Path,
+                Path = path,
                 InnerLinks = links,
             };
         }

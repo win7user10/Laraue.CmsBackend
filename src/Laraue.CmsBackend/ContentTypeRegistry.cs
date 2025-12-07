@@ -16,7 +16,7 @@ public class ContentTypeRegistry
 
         if (!_contentTypes.TryAdd(schema.Name, schema))
         {
-            throw new InvalidOperationException($"ContentType {schema.Name} has already been added");
+            throw new InvalidOperationException($"ContentType {schema.Name} has already been added.");
         }
         
         return this;

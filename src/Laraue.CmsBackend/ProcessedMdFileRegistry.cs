@@ -6,20 +6,13 @@ namespace Laraue.CmsBackend;
 public class ProcessedMdFileRegistry
 {
     private readonly Node _hierarchy = new();
-    
-    private const string IndexFileName = "index";
 
     public bool TryAdd(ProcessedMdFile mdFile)
     {
         var filePath = (string[])mdFile["path"];
-        var fileName = (string)mdFile["fileName"];
-        
-        var allSegments = fileName == IndexFileName
-            ? filePath
-            : filePath.Append(fileName).ToArray();
 
         var node = _hierarchy;
-        foreach (var pathSegment in allSegments)
+        foreach (var pathSegment in filePath)
         {
             if (!node.HasNode(pathSegment))
             {

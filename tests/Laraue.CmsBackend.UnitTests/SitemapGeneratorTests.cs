@@ -18,7 +18,7 @@ hi";
         var content1 =  new ContentProperties(
             content1Text,
             new FilePath(["docs", "articles"]),
-            "article1");
+            "index");
         
         var cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(
@@ -37,7 +37,7 @@ hi";
         var items = _sitemapGenerator.GetItems();
         var item = Assert.Single(items);
         
-        Assert.Equal("docs/articles/article1", item.Location);
+        Assert.Equal("docs/articles", item.Location);
         Assert.Equal(new DateTime(2020, 01, 01), item.LastModified);
     }
     
