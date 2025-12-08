@@ -73,7 +73,7 @@ public class MarkdownProcessor : IMarkdownProcessor
 
             if (!result.TryAdd(processedFile))
             {
-                errors.Add(mdFile, $"The same file already has been registered '{mdFile.Path}'", 0);
+                errors.Add(mdFile, $"The same file already has been registered '{mdFile.LogicalPath}'", 0);
             }
         }
 

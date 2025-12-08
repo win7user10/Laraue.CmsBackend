@@ -31,7 +31,12 @@ public class CmsBackendBuilderTests
         Assert.NotNull(article);
         
         var tags = Assert.IsType<object[]>(article["tags"]);
+        var fileName = Assert.IsType<string>(article["fileName"]);
+        var path = Assert.IsType<string[]>(article["path"]);
+        
         Assert.Equal(2, tags.Length);
+        Assert.Equal("introduction", fileName);
+        Assert.Equal(["articles", "introduction"], path);
     }
     
     [Fact]
@@ -39,12 +44,16 @@ public class CmsBackendBuilderTests
     {
         var section = _cmsBackend.GetEntity(new GetEntityRequest
         {
-            Path =  ["articles"]
+            Path = ["articles"]
         });
         
         Assert.NotNull(section);
         
         var title = Assert.IsType<string>(section["title"]);
+        var path = Assert.IsType<string[]>(section["path"]);
+        
+        Assert.DoesNotContain("fileName", section);
         Assert.Equal("Index page", title);
+        Assert.Equal(["articles"], path);
     }
 }

@@ -2,11 +2,24 @@
 
 public sealed class ParsedMdFile
 {
+    /// <summary>
+    /// File name without extension, 'index'.
+    /// </summary>
+    public required string? FileName { get; init; }
     public required string ContentType { get; init; }
     public required string Content { get; init; }
     public required ICollection<ParsedMdFileProperty> Properties { get; init; }
     public required ICollection<ArticleInnerLink> InnerLinks { get; init; }
-    public required FilePath Path { get; init; }
+    
+    /// <summary>
+    /// Physical path, 'articles/index.md'.
+    /// </summary>
+    public required FilePath PhysicalPath { get; init; }
+    
+    /// <summary>
+    /// The path that matches the specified rules, 'articles'.
+    /// </summary>
+    public required FilePath LogicalPath { get; init; }
 }
 
 public sealed record ParsedMdFileProperty

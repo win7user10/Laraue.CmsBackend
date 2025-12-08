@@ -8,9 +8,9 @@ public class ParsedMdFileRegistry
     
     public ParsedMdFileRegistry Add(ParsedMdFile parsedMdFile)
     {
-        if (!_parsedMdFiles.TryAdd(parsedMdFile.Path, parsedMdFile))
+        if (!_parsedMdFiles.TryAdd(parsedMdFile.LogicalPath, parsedMdFile))
         {
-            throw new InvalidOperationException($"Content '{parsedMdFile.ContentType}' path: '{parsedMdFile.Path}' has already been added.");
+            throw new InvalidOperationException($"Content '{parsedMdFile.ContentType}' path: '{parsedMdFile.LogicalPath}' has already been added.");
         }
         
         return this;
