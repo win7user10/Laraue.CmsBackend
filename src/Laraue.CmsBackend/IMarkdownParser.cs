@@ -60,16 +60,23 @@ public class MarkdownParser(
                 ? contentTypeProperty.Value?.ToString() ?? ContentTypeRegistry.UndefinedContentType
                 : ContentTypeRegistry.UndefinedContentType;
 
-            var path = contentProperties.Id == IndexFileName
+            // TODO - logical path generating can be in separated class. 
+            var logicalPath = contentProperties.Id == IndexFileName
                 ? contentProperties.Path
                 : new FilePath(contentProperties.Path.Segments.Append(contentProperties.Id).ToArray());
+
+            var fileName = contentProperties.Id == IndexFileName
+                ? null
+                : contentProperties.Id;
             
             return new ParsedMdFile
             {
+                FileName = fileName,
                 ContentType = contentType,
                 Content = content,
                 Properties = properties.Values,
-                Path = path,
+                PhysicalPath = contentProperties.Path,
+                LogicalPath = logicalPath,
                 InnerLinks = links,
             };
         }

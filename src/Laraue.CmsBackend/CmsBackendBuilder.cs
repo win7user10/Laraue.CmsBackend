@@ -90,7 +90,7 @@ public class CmsBackendException : Exception
             sb.AppendLine()
                 .Append("Entity ")
                 .Append("path: '")
-                .Append(string.Join(Path.DirectorySeparatorChar, exceptionByEntity.Key.Path))
+                .Append(string.Join(Path.DirectorySeparatorChar, exceptionByEntity.Key.LogicalPath))
                 .Append("' type '")
                 .Append(exceptionByEntity.Key.ContentType)
                 .Append('\'')
