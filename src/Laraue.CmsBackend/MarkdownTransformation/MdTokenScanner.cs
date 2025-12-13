@@ -86,9 +86,25 @@ public class MdTokenScanner(string input)
         {
             if (!Check(0, IsAlpha))
             {
+                var stringValue = GetCurrentScanValue();
+                object value = stringValue;
+
+                if (int.TryParse(stringValue, out var intValue))
+                {
+                    value = intValue;
+                }
+                if (long.TryParse(stringValue, out var longValue))
+                {
+                    value = longValue;
+                }
+                else if (double.TryParse(stringValue, out var doubleValue))
+                {
+                    value = doubleValue;
+                }
+                
                 AddToken(
                     MdTokenType.Number,
-                    int.Parse(GetCurrentScanValue()));
+                    value);
                 return;
             }
         }
