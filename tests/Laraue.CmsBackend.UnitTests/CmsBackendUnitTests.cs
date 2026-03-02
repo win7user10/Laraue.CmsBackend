@@ -1,7 +1,7 @@
 ﻿using Laraue.CmsBackend.Contracts;
-using Laraue.CmsBackend.MarkdownTransformation;
 using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.Exceptions.Web;
+using Laraue.Interpreter.Markdown;
 
 namespace Laraue.CmsBackend.UnitTests;
 
@@ -46,8 +46,7 @@ hi2";
         
         _cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(
-                    new MarkdownToHtmlTransformer(),
-                    new ArticleInnerLinksGenerator()),
+                    new MarkdownTranspiler()),
                 new MarkdownProcessor())
             .AddContentType<UnitTestArticle>()
             .AddContent(content1)

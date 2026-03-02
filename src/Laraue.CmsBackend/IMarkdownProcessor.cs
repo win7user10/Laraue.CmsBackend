@@ -96,7 +96,7 @@ public class MarkdownProcessor : IMarkdownProcessor
         
         if (isArray)
         {
-            if (value is not string[] arrayParts)
+            if (value is not object[] arrayParts)
             {
                 throw new InvalidOperationException();
             }

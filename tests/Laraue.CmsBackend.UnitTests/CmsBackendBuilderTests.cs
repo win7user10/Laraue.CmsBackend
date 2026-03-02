@@ -1,6 +1,6 @@
 ﻿using Laraue.CmsBackend.Extensions;
-using Laraue.CmsBackend.MarkdownTransformation;
 using Laraue.CmsBackend.UnitTests.types;
+using Laraue.Interpreter.Markdown;
 
 namespace Laraue.CmsBackend.UnitTests;
 
@@ -12,8 +12,7 @@ public class CmsBackendBuilderTests
     {
         _cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(
-                    new MarkdownToHtmlTransformer(),
-                    new ArticleInnerLinksGenerator()),
+                    new MarkdownTranspiler()),
                 new MarkdownProcessor())
             .AddContentType<Article>()
             .AddContentFolder("articles")

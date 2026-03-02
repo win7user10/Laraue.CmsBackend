@@ -1,21 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <Description>The package to build api for the listed locally markdown files.</Description>
-        <RepositoryType>git</RepositoryType>
-        <Authors>Belyanskiy Ilya</Authors>
-        <Version>1.1.3</Version>
-    </PropertyGroup>
-
     <ItemGroup>
-      <PackageReference Include="Laraue.Core.DataAccess" Version="9.1.0" />
-      <PackageReference Include="Laraue.Core.Exceptions" Version="9.0.2" />
-      <PackageReference Include="Laraue.Interpreter.Parsing" Version="0.0.4" />
-      <PackageReference Include="Laraue.Interpreter.Scanning" Version="0.0.4" />
-      <PackageReference Include="Laraue.Interpreter.Common" Version="0.0.4" />
+        <PackageReference Include="Laraue.Core.DataAccess" Version="$(LaraueDataAccessVersion)" />
+        <PackageReference Include="Laraue.Core.Exceptions" Version="$(LaraueExceptionsVersion)" />
+        <PackageReference Include="Laraue.Interpreter.Markdown" Version="$(LaraueInterpreterVersion)" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <IsPackable>true</IsPackable>
+    </PropertyGroup>
 
 </Project>

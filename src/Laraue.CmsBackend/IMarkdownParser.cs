@@ -1,8 +1,6 @@
 ﻿using Laraue.CmsBackend.Contracts;
-using Laraue.CmsBackend.MarkdownTransformation;
-using Laraue.Interpreter.Common;
-using Laraue.Interpreter.Parsing.Extensions;
-using Laraue.Interpreter.Scanning.Extensions;
+using Laraue.Interpreter.Markdown;
+using Laraue.Interpreter.Markdown.Meta;
 
 namespace Laraue.CmsBackend;
 
@@ -12,82 +10,51 @@ public interface IMarkdownParser
 }
 
 public class MarkdownParser(
-    ITransformer? markdownContentTransformer,
-    IArticleInnerLinksGenerator articleInnerLinksGenerator)
+    IMarkdownTranspiler markdownTranspiler)
     : IMarkdownParser
 {
-    public ParsedMdFile Parse(ContentProperties properties)
-    {
-        try
-        {
-            return new InternalParser(markdownContentTransformer, articleInnerLinksGenerator, properties).Parse();
-        }
-        catch (CompileException exception)
-        {
-            throw new MarkdownParserException($"Incorrect markdown: {exception.Message}", exception);
-        }
-    }
+    private const string IndexFileName = "index";
     
-    private class InternalParser(
-        ITransformer? markdownContentTransformer,
-        IArticleInnerLinksGenerator articleInnerLinksGenerator,
-        ContentProperties contentProperties)
+    public ParsedMdFile Parse(ContentProperties contentSource)
     {
-        private const string IndexFileName = "index";
+        var result = markdownTranspiler.ToHtml(contentSource.Markdown);
+        var content = result.HtmlContent;
         
-        public ParsedMdFile Parse()
+        // Read text
+        var links = result.InnerLinks;
+        var properties = ParseProperties(result.Headers);
+
+        var contentType = properties.Remove("type", out var contentTypeProperty)
+            ? contentTypeProperty.Value?.ToString() ?? ContentTypeRegistry.UndefinedContentType
+            : ContentTypeRegistry.UndefinedContentType;
+
+        // TODO - logical path generating can be in separated class. 
+        var logicalPath = contentSource.Id == IndexFileName
+            ? contentSource.Path
+            : new FilePath(contentSource.Path.Segments.Append(contentSource.Id).ToArray());
+
+        var fileName = contentSource.Id == IndexFileName
+            ? null
+            : contentSource.Id;
+            
+        return new ParsedMdFile
         {
-            var scanner = new MdTokenScanner(contentProperties.Markdown);
-            var scanResult = scanner.ScanTokens();
-            scanResult.ThrowOnAnyError();
-            
-            var parser = new MdTokenParser(scanResult.Tokens);
-            var parseResult = parser.Parse();
-            parseResult.ThrowOnAnyError();
-
-            var content = contentProperties.Markdown;
-            
-            // Read text
-            var links = articleInnerLinksGenerator.ParseLinks(parseResult.Result!);
-            if (markdownContentTransformer is not null)
-            {
-                content = markdownContentTransformer.Transform(parseResult.Result!);
-            }
-            
-            var properties = ParseProperties(parseResult.Result!);
-
-            var contentType = properties.Remove("type", out var contentTypeProperty)
-                ? contentTypeProperty.Value?.ToString() ?? ContentTypeRegistry.UndefinedContentType
-                : ContentTypeRegistry.UndefinedContentType;
-
-            // TODO - logical path generating can be in separated class. 
-            var logicalPath = contentProperties.Id == IndexFileName
-                ? contentProperties.Path
-                : new FilePath(contentProperties.Path.Segments.Append(contentProperties.Id).ToArray());
-
-            var fileName = contentProperties.Id == IndexFileName
-                ? null
-                : contentProperties.Id;
-            
-            return new ParsedMdFile
-            {
-                FileName = fileName,
-                ContentType = contentType,
-                Content = content,
-                Properties = properties.Values,
-                PhysicalPath = contentProperties.Path,
-                LogicalPath = logicalPath,
-                InnerLinks = links,
-            };
-        }
+            FileName = fileName,
+            ContentType = contentType,
+            Content = content,
+            Properties = properties.Values,
+            PhysicalPath = contentSource.Path,
+            LogicalPath = logicalPath,
+            InnerLinks = links,
+        };
     }
 
-    private static Dictionary<string, ParsedMdFileProperty> ParseProperties(MarkdownTree markdownTree)
+    private static Dictionary<string, ParsedMdFileProperty> ParseProperties(MarkdownHeader[] headers)
     {
         var result = new Dictionary<string, ParsedMdFileProperty>();
-        foreach (var header in markdownTree.Headers)
+        foreach (var header in headers)
         {
-            var property = new ParsedMdFileProperty()
+            var property = new ParsedMdFileProperty
             {
                 Value = header.Value,
                 Name = header.PropertyName,

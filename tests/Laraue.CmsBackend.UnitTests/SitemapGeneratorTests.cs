@@ -1,5 +1,5 @@
 ﻿using Laraue.CmsBackend.Contracts;
-using Laraue.CmsBackend.MarkdownTransformation;
+using Laraue.Interpreter.Markdown;
 
 namespace Laraue.CmsBackend.UnitTests;
 
@@ -22,8 +22,7 @@ hi";
         
         var cmsBackend = new CmsBackendBuilder(
                 new MarkdownParser(
-                    new MarkdownToHtmlTransformer(),
-                    new ArticleInnerLinksGenerator()),
+                    new MarkdownTranspiler()),
                 new MarkdownProcessor())
             .AddContent(content1)
             .Build();
