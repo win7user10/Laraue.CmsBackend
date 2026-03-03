@@ -4,7 +4,9 @@ namespace Laraue.CmsBackend;
 
 public interface IMarkdownProcessor
 {
-    ApplyResult ApplyRegistrySchemas(IEnumerable<ParsedMdFile> mdFiles, ContentTypeRegistry typesRegistry);
+    ApplyResult ApplyRegistrySchemas(
+        IEnumerable<ParsedMdFile> mdFiles,
+        ContentTypeRegistry typesRegistry);
 }
 
 public class MarkdownProcessor : IMarkdownProcessor

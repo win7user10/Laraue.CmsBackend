@@ -25,20 +25,16 @@ public class ProcessedMdFileRegistry
             node = node.GetNode(pathSegment);
         }
 
-        if (node.NodeMdFile is not null)
-        {
-            return false;
-        }
-        
-        node.NodeMdFile = mdFile;
-        return true;
+        return node.NodeFiles.TryAdd((string)mdFile["languageCode"], mdFile);
     }
 
-    public bool TryGet(string[] path, [NotNullWhen(true)] out ProcessedMdFile? mdFile)
+    public bool TryGet(
+        string languageCode,
+        string[] path,
+        [NotNullWhen(true)] out ProcessedMdFile? mdFile)
     {
-        if (TryGetNodeByPath(path, out var node) && node.NodeMdFile is not null)
+        if (TryGetNodeByPath(path, out var node) && node.NodeFiles.TryGetValue(languageCode, out mdFile))
         {
-            mdFile = node.NodeMdFile;
             return true;
         }
 
@@ -46,11 +42,13 @@ public class ProcessedMdFileRegistry
         return false;
     }
 
-    public IEnumerable<ProcessedMdFile> GetEntities(string[]? path)
+    public IEnumerable<ProcessedMdFile> GetEntities(
+        string languageCode,
+        string[]? path)
     {
         return GetSubNodesByPath(path ?? [], int.MaxValue)
-            .Where(node => node.NodeMdFile != null)
-            .Select(node => node.NodeMdFile!);
+            .Where(node => node.NodeFiles.ContainsKey(languageCode))
+            .Select(node => node.NodeFiles[languageCode]);
     }
     
     private bool TryGetNodeByPath(string[] fromPath, [NotNullWhen(true)] out Node? result)
@@ -100,26 +98,26 @@ public class ProcessedMdFileRegistry
         return result;
     }
     
-    public IEnumerable<SubSectionItem> GetSubSections(string[] fromPath, int depth)
+    public IEnumerable<SubSectionItem> GetSubSections(
+        string languageCode,
+        string[] fromPath,
+        int depth)
     {
         var node = _hierarchy;
         
         // descend to the requested path
         foreach (var pathSegment in fromPath)
-        {
             if (!node.TryGetNode(pathSegment, out node))
-            {
                 return [];
-            }
-        }
 
         var result = new List<SubSectionItem>();
-        AppendSubSections(result, node, depth, fromPath, []);
+        AppendSubSections(languageCode, result, node, depth, fromPath, []);
         
         return result;
     }
 
     private void AppendSubSections(
+        string languageCode,
         List<SubSectionItem> destination,
         Node attachedNode,
         int depth,
@@ -127,30 +125,28 @@ public class ProcessedMdFileRegistry
         string[] currentRelativePath)
     {
         if (depth < 1)
-        {
             return;
-        }
 
         if (attachedNode.Children.Count == 0)
-        {
             return;
-        }
         
         foreach (var child in attachedNode.Children)
         {
             var children = new List<SubSectionItem>();
             var nextPath = currentRelativePath.Append(child.FileName!).ToArray();
-            AppendSubSections(children, child, depth - 1, requestedPath, nextPath);
+            AppendSubSections(languageCode, children, child, depth - 1, requestedPath, nextPath);
 
             object? title = null;
-            child.NodeMdFile?.TryGetValue("title", out title);
+            
+            child.NodeFiles.TryGetValue(languageCode, out var contentNode);
+            contentNode?.TryGetValue("title", out title);
             
             destination.Add(new SubSectionItem
             {
                 FileName = child.FileName!,
                 Children = children.ToArray(),
                 FullPath = requestedPath.Union(nextPath).ToArray(),
-                HasContent = child.NodeMdFile is not null && ((string)child.NodeMdFile["content"]).Length > 0,
+                HasContent = contentNode is not null && ((string)contentNode["content"]).Length > 0,
                 Title = title as string,
                 RelativePath = nextPath
             });
@@ -170,7 +166,7 @@ public class ProcessedMdFileRegistry
     private record Node
     {
         public string? FileName { get; set; }
-        public ProcessedMdFile? NodeMdFile { get; set; }
+        public NodeFiles NodeFiles { get; set; } = new();
         public List<Node> Children { get; set; } = new();
 
         public bool HasNode(string name)
@@ -193,5 +189,9 @@ public class ProcessedMdFileRegistry
             node = Children.FirstOrDefault(x => x.FileName == name);
             return node != null;
         }
+    }
+
+    private class NodeFiles : Dictionary<string, ProcessedMdFile>
+    {
     }
 }

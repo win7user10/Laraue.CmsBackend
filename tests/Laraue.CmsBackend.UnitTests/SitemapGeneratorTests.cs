@@ -18,9 +18,11 @@ hi";
         var content1 =  new ContentProperties(
             content1Text,
             new FilePath(["docs", "articles"]),
-            "index");
+            "index",
+            "en");
         
         var cmsBackend = new CmsBackendBuilder(
+                new CmsBackendOptions(),
                 new MarkdownParser(
                     new MarkdownTranspiler()),
                 new MarkdownProcessor())

@@ -3,6 +3,7 @@
 public record ContentProperties(
     string Markdown,
     FilePath Path,
-    string Id)
+    string Id,
+    string LanguageCode)
 {
 }

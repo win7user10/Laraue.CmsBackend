@@ -4,17 +4,37 @@ namespace Laraue.CmsBackend;
 
 public class ParsedMdFileRegistry
 {
-    private readonly Dictionary<FilePath, ParsedMdFile> _parsedMdFiles = new ();
+    private readonly Dictionary<FilePath, ParsedMdFileByLanguageCode> _parsedMdFiles = new ();
     
     public ParsedMdFileRegistry Add(ParsedMdFile parsedMdFile)
     {
-        if (!_parsedMdFiles.TryAdd(parsedMdFile.LogicalPath, parsedMdFile))
+        if (!_parsedMdFiles.TryGetValue(parsedMdFile.LogicalPath, out var filesDictionary))
         {
-            throw new InvalidOperationException($"Content '{parsedMdFile.ContentType}' path: '{parsedMdFile.LogicalPath}' has already been added.");
+            _parsedMdFiles[parsedMdFile.LogicalPath] = new ParsedMdFileByLanguageCode
+            {
+                [parsedMdFile.LanguageCode] = parsedMdFile,
+            };
+        }
+        else
+        {
+            if (!filesDictionary.TryAdd(parsedMdFile.LanguageCode, parsedMdFile))
+            {
+                throw new InvalidOperationException(
+                    $"Content '{parsedMdFile.ContentType}' " +
+                    $"path: '{parsedMdFile.LogicalPath}' " +
+                    $"lang: '{parsedMdFile.LanguageCode}' " +
+                    $"has already been added.");
+            }
         }
         
         return this;
     }
     
-    public ICollection<ParsedMdFile> Values => _parsedMdFiles.Values;
+    public ICollection<ParsedMdFile> Values => _parsedMdFiles.Values
+        .SelectMany(x => x.Values)
+        .ToArray();
+}
+    
+public class ParsedMdFileByLanguageCode : Dictionary<string, ParsedMdFile>
+{
 }

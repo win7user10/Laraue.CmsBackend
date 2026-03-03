@@ -8,13 +8,27 @@ public static class CmsBackendBuilderExtensions
         this ICmsBackendBuilder builder,
         string path)
     {
-        var filesIterator = Directory.EnumerateFiles(path, "*.md", SearchOption.AllDirectories);
+        var filesIterator = Directory.EnumerateFiles(
+            path,
+            "*.md",
+            SearchOption.AllDirectories);
         
         var errors = new List<AddContentFolderFileException>();
         
         foreach (var filePath in filesIterator)
         {
-            var fileName = Path.GetFileNameWithoutExtension(filePath);
+            var fullFileName = Path.GetFileNameWithoutExtension(filePath);
+            var fileNameParts = fullFileName.Split('.');
+
+            var fileNameHasLanguageDefinition = fileNameParts.Length > 1;
+            var languageCode = fileNameHasLanguageDefinition
+                ? fileNameParts[0]
+                : builder.Options.DefaultLanguageCode;
+            
+            var fileName = fileNameHasLanguageDefinition
+                ? string.Join('.', fileNameParts.Skip(1))
+                : fullFileName;
+            
             var directoryName = Path.GetDirectoryName(filePath);
             var directorySegments = new FilePath(directoryName!.Split(Path.DirectorySeparatorChar));
             
@@ -26,7 +40,8 @@ public static class CmsBackendBuilderExtensions
                     new ContentProperties(
                         fileContent,
                         directorySegments,
-                        fileName));
+                        fileName,
+                        languageCode));
             }
             catch (MarkdownParserException e)
             {

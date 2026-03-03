@@ -28,7 +28,8 @@ hi";
         var content1 =  new ContentProperties(
             content1Text,
             new FilePath(["docs", "articles"]),
-            "article1");
+            "article1",
+            "en");
         
         var content2Text = @"---
 tags: [tag2, tag3]
@@ -42,9 +43,11 @@ hi2";
         var content2 = new ContentProperties(
             content2Text,
             new FilePath(["docs", "articles"]),
-            "article2");
+            "article2",
+            "en");
         
         _cmsBackend = new CmsBackendBuilder(
+                new CmsBackendOptions(),
                 new MarkdownParser(
                     new MarkdownTranspiler()),
                 new MarkdownProcessor())

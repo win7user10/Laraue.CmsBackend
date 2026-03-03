@@ -20,12 +20,14 @@ public interface ICmsBackend
 
 public class GetSectionsRequest
 {
+    public string? LanguageCode { get; init; }
     public string[]? FromPath { get; init; }
     public required int Depth { get; init; }
 }
 
 public class GetEntitiesRequest : IPaginatedRequest
 {
+    public string? LanguageCode { get; init; }
     public string[]? FromPath { get; init; }
     public string[]? Properties { get; set; }
     public FilterRow[]? Filters { get; set; }
@@ -35,12 +37,26 @@ public class GetEntitiesRequest : IPaginatedRequest
 
 public class GetEntityRequest
 {
+    /// <summary>
+    /// Entity path.
+    /// </summary>
     public required string[] Path { get; set; }
+    
+    /// <summary>
+    /// Entity properties to return.
+    /// </summary>
     public string[]? Properties { get; set; }
+    
+    /// <summary>
+    /// The entity language code. When is not set the entity
+    /// with default language will be returned.
+    /// </summary>
+    public string? LanguageCode { get; set; }
 }
 
 public class CountPropertyValuesRequest
 {
+    public string? LanguageCode { get; init; }
     public required string Property { get; init; }
     public string[]? FromPath { get; set; }
     public FilterRow[]? Filters { get; init; }
@@ -83,21 +99,27 @@ public enum SortOrder
     Descending,
 }
 
-public class CmsBackendUnit(
+public class CmsBackend(
     ProcessedMdFileRegistry registry,
-    CmsBackendFunctionsRegistry functionsRegistry)
+    CmsBackendFunctionsRegistry functionsRegistry,
+    CmsBackendOptions options)
     : ICmsBackend
 {
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
     {
-        return registry.TryGet(request.Path, out var value)
+        var languageCode = request.LanguageCode ?? options.DefaultLanguageCode;
+        
+        return registry.TryGet(languageCode, request.Path, out var value)
             ? MapMdFileToDto(value, request.Properties)
             : throw new NotFoundException();
     }
 
     public IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request)
     {
-        var source = registry.GetEntities(request.FromPath);
+        var source = registry.GetEntities(
+            request.LanguageCode ?? options.DefaultLanguageCode,
+            request.FromPath);
+        
         var filteredSource = ApplyFilters(source, request.Filters);
         var orderedSource = ApplySort(filteredSource, request.Sorting);
         var projectedSource = ApplyMap(orderedSource, request.Properties);
@@ -116,7 +138,10 @@ public class CmsBackendUnit(
 
     public List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request)
     {
-        var source = registry.GetEntities(request.FromPath);
+        var source = registry.GetEntities(
+            request.LanguageCode ?? options.DefaultLanguageCode,
+            request.FromPath);
+        
         var filteredSource = ApplyFilters(source, request.Filters);
         var projectedSource = ApplyMap(filteredSource, [request.Property]);
 
@@ -143,7 +168,9 @@ public class CmsBackendUnit(
 
     public List<SectionItem> GetSections(GetSectionsRequest request)
     {
-        var subSections = registry.GetSubSections(request.FromPath ?? [], request.Depth);
+        var subSections = registry.GetSubSections(
+            request.LanguageCode ?? options.DefaultLanguageCode,
+            request.FromPath ?? [], request.Depth);
 
         return subSections.Select(Map).ToList();
     }

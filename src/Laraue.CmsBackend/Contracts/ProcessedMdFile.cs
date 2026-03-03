@@ -18,6 +18,7 @@ public sealed class ProcessedMdFile : Dictionary<string, object>
             ["content"] = mdFile.Content,
             ["path"] = mdFile.LogicalPath.Segments,
             ["innerLinks"] = mdFile.InnerLinks,
+            ["languageCode"] = mdFile.LanguageCode,
         };
 
         if (mdFile.FileName is not null)

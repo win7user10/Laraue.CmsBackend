@@ -49,6 +49,7 @@ public class MarkdownParser(
                 PhysicalPath = contentSource.Path,
                 LogicalPath = logicalPath,
                 InnerLinks = links,
+                LanguageCode = contentSource.LanguageCode,
             };
         }
         catch (CompileException exception)

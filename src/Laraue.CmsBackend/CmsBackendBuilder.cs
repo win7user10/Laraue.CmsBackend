@@ -10,6 +10,7 @@ public interface ICmsBackendBuilder
     ICmsBackendBuilder AddContentType<TContentType>() where TContentType : BaseContentType;
     ICmsBackendBuilder AddFunctionsSupport(Type functionsClass);
     ICmsBackend Build();
+    CmsBackendOptions Options { get; }
 }
 
 public class CmsBackendBuilder : ICmsBackendBuilder
@@ -20,9 +21,14 @@ public class CmsBackendBuilder : ICmsBackendBuilder
     private readonly ContentTypeRegistry _contentTypeRegistry = new();
     private readonly ParsedMdFileRegistry _parsedMdFileRegistry = new();
     private readonly CmsBackendFunctionsRegistry _cmsBackendFunctionsRegistry = new();
+    public CmsBackendOptions Options { get; }
 
-    public CmsBackendBuilder(IMarkdownParser markdownParser, IMarkdownProcessor markdownProcessor)
+    public CmsBackendBuilder(
+        CmsBackendOptions options,
+        IMarkdownParser markdownParser,
+        IMarkdownProcessor markdownProcessor)
     {
+        Options = options;
         _markdownParser = markdownParser;
         _markdownProcessor = markdownProcessor;
 
@@ -62,7 +68,10 @@ public class CmsBackendBuilder : ICmsBackendBuilder
 
         if (buildResult.Success)
         {
-            return new CmsBackendUnit(buildResult.MarkdownFiles, _cmsBackendFunctionsRegistry);
+            return new CmsBackend(
+                buildResult.MarkdownFiles,
+                _cmsBackendFunctionsRegistry,
+                Options);
         }
 
         throw new CmsBackendException(buildResult.Errors);
