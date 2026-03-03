@@ -139,13 +139,16 @@ public class ProcessedMdFileRegistry
         
         foreach (var child in attachedNode.Children)
         {
+            if (!child.NodeFiles.TryGetValue(languageCode, out var contentNode))
+                continue;
+            
             var children = new List<SubSectionItem>();
             var nextPath = currentRelativePath.Append(child.FileName!).ToArray();
+            
             AppendSubSections(languageCode, children, child, depth - 1, requestedPath, nextPath);
 
             object? title = null;
             
-            child.NodeFiles.TryGetValue(languageCode, out var contentNode);
             contentNode?.TryGetValue("title", out title);
             
             destination.Add(new SubSectionItem
