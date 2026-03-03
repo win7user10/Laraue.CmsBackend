@@ -8,6 +8,7 @@ public sealed class ParsedMdFile
     /// File name without extension, 'index'.
     /// </summary>
     public required string? FileName { get; init; }
+    public required string LanguageCode { get; init; }
     public required string ContentType { get; init; }
     public required string Content { get; init; }
     public required ICollection<ParsedMdFileProperty> Properties { get; init; }

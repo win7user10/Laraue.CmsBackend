@@ -11,6 +11,7 @@ public class CmsBackendBuilderTests
     public CmsBackendBuilderTests()
     {
         _cmsBackend = new CmsBackendBuilder(
+                new CmsBackendOptions(),
                 new MarkdownParser(
                     new MarkdownTranspiler()),
                 new MarkdownProcessor())

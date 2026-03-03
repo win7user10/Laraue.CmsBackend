@@ -8,7 +8,7 @@
     <!-- Designate all projects as non-package projects by default -->
     <IsPackable>false</IsPackable>
     <Description>The package to build api for the listed locally markdown files.</Description>
-    <Version>1.2.1</Version>
+    <Version>1.3.0</Version>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
