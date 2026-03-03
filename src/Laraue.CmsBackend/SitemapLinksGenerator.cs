@@ -23,13 +23,17 @@ public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
             new GetEntitiesRequest
             {
                 Pagination = new PaginationData { Page = 0, PerPage = int.MaxValue - 1 },
-                Properties = ["updatedAt", "path"]
+                Properties = ["updatedAt", "path", "languageCode"]
             });
         
         var result = new List<SitemapItemDto>();
         foreach (var entity in entities.Data)
         {
-            var location = string.Join("/", entity.Path);
+            var locationSegments = entity.LanguageCode == cmsBackend.Options.DefaultLanguageCode
+                ? entity.Path
+                : new [] { entity.LanguageCode }.Union(entity.Path);
+            
+            var location = string.Join("/", locationSegments);
             result.Add(new SitemapItemDto(location, entity.UpdatedAt));
         }
         
@@ -75,6 +79,7 @@ public record GetEntitiesResult
 {
     public DateTime? UpdatedAt { get; init; }
     public required string[] Path { get; init; }
+    public required string LanguageCode { get; init; }
 }
 
 public record SitemapItemDto(string Location, DateTime? LastModified);

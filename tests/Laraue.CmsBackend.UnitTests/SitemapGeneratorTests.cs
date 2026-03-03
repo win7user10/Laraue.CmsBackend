@@ -21,12 +21,20 @@ hi";
             "index",
             "en");
         
+        
+        var content2 =  new ContentProperties(
+            content1Text,
+            new FilePath(["docs", "articles"]),
+            "index",
+            "ru");
+        
         var cmsBackend = new CmsBackendBuilder(
                 new CmsBackendOptions(),
                 new MarkdownParser(
                     new MarkdownTranspiler()),
                 new MarkdownProcessor())
             .AddContent(content1)
+            .AddContent(content2)
             .Build();
         
         _sitemapGenerator = new SitemapGenerator(cmsBackend);
@@ -36,10 +44,13 @@ hi";
     public void SitemapItems_ShouldBeGenerated_Always()
     {
         var items = _sitemapGenerator.GetItems();
-        var item = Assert.Single(items);
+        Assert.Equal(2, items.Length);
         
-        Assert.Equal("docs/articles", item.Location);
-        Assert.Equal(new DateTime(2020, 01, 01), item.LastModified);
+        Assert.Equal("docs/articles", items[0].Location);
+        Assert.Equal(new DateTime(2020, 01, 01), items[0].LastModified);
+        
+        Assert.Equal("ru/docs/articles", items[1].Location);
+        Assert.Equal(new DateTime(2020, 01, 01), items[1].LastModified);
     }
     
     [Fact]

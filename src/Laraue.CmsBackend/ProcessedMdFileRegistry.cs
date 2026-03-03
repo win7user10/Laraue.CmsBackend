@@ -43,12 +43,19 @@ public class ProcessedMdFileRegistry
     }
 
     public IEnumerable<ProcessedMdFile> GetEntities(
-        string languageCode,
+        string? languageCode,
         string[]? path)
     {
-        return GetSubNodesByPath(path ?? [], int.MaxValue)
-            .Where(node => node.NodeFiles.ContainsKey(languageCode))
-            .Select(node => node.NodeFiles[languageCode]);
+        var nodeFiles = GetSubNodesByPath(path ?? [], int.MaxValue)
+            .Select(x => x.NodeFiles);
+        
+        if (languageCode is not null)
+        {
+            return nodeFiles.Where(x => x.ContainsKey(languageCode))
+                .Select(x => x[languageCode]);
+        }
+        
+        return nodeFiles.SelectMany(x => x.Values);
     }
     
     private bool TryGetNodeByPath(string[] fromPath, [NotNullWhen(true)] out Node? result)

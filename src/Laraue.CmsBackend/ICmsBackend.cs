@@ -16,6 +16,7 @@ public interface ICmsBackend
     IShortPaginatedResult<T> GetEntities<T>(GetEntitiesRequest request) where T : class;
     List<CountPropertyRow> CountPropertyValues(CountPropertyValuesRequest request);
     List<SectionItem> GetSections(GetSectionsRequest request);
+    CmsBackendOptions Options { get; }
 }
 
 public class GetSectionsRequest
@@ -117,7 +118,7 @@ public class CmsBackend(
     public IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request)
     {
         var source = registry.GetEntities(
-            request.LanguageCode ?? options.DefaultLanguageCode,
+            request.LanguageCode,
             request.FromPath);
         
         var filteredSource = ApplyFilters(source, request.Filters);
@@ -174,6 +175,8 @@ public class CmsBackend(
 
         return subSections.Select(Map).ToList();
     }
+
+    public CmsBackendOptions Options => options;
 
     private static object GetObject(Dictionary<string, object> dict, Type type)
     {
