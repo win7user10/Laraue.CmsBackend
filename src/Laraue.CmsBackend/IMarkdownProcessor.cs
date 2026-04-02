@@ -103,8 +103,23 @@ public class MarkdownProcessor : IMarkdownProcessor
                 throw new InvalidOperationException();
             }
             
-            var result = arrayParts.Select(part => Parse(part, type, false)).ToArray();
-            return result.Any(i => i == null) ? null : result;
+            var result = Array.CreateInstance(GetClrType(type), arrayParts.Length);
+            var hasNull = false;
+            
+            for (var index = 0; index < arrayParts.Length; index++)
+            {
+                var item = arrayParts[index];
+                var parsedValue = Parse(item, type, false);
+                if (parsedValue is null)
+                {
+                    hasNull = true;
+                    break;
+                }
+                
+                result.SetValue(parsedValue, index);
+            }
+            
+            return hasNull ? null : result;
         }
 
         if (value is not string stringValue)
@@ -125,6 +140,18 @@ public class MarkdownProcessor : IMarkdownProcessor
             default:
                 throw new InvalidOperationException();
         }
+    }
+
+    private static Type GetClrType(ContentTypePropertyType type)
+    {
+        return type switch
+        {
+            ContentTypePropertyType.String => typeof(string),
+            ContentTypePropertyType.Number => typeof(int),
+            ContentTypePropertyType.DateTime => typeof(DateTime),
+            ContentTypePropertyType.Float => typeof(double),
+            _ => throw new NotSupportedException()
+        };
     }
 
     private class ErrorRegistry

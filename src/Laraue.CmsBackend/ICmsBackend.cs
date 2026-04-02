@@ -11,6 +11,7 @@ namespace Laraue.CmsBackend;
 
 public interface ICmsBackend
 {
+    T GetEntity<T>(GetEntityRequest request);
     Dictionary<string, object> GetEntity(GetEntityRequest request);
     IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request);
     IShortPaginatedResult<T> GetEntities<T>(GetEntitiesRequest request) where T : class;
@@ -65,7 +66,7 @@ public class CountPropertyValuesRequest
 
 public class CountPropertyRow
 {
-    public required object Key { get; init; }
+    public required string Key { get; init; }
     public required int Count { get; init; }
 }
 
@@ -81,11 +82,15 @@ public class FilterRow
 public enum FilterOperator
 {
     Equals,
+    NotEquals,
     More,
     Less,
     MoreOrEqual,
     LessOrEqual,
-    In,
+    ValueInList,
+    ValueNotInList,
+    ValueListContain,
+    ValueListNotContain,
 }
 
 public class SortRow
@@ -106,6 +111,13 @@ public class CmsBackend(
     CmsBackendOptions options)
     : ICmsBackend
 {
+    public T GetEntity<T>(GetEntityRequest request)
+    {
+        var entity = GetEntity(request);
+        
+        return (T)GetObject(entity, typeof(T));
+    }
+
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
     {
         var languageCode = request.LanguageCode ?? options.DefaultLanguageCode;
@@ -162,7 +174,7 @@ public class CmsBackend(
             .Select(x => new CountPropertyRow
             {
                 Count = x.Count(),
-                Key = x.Key
+                Key = (string) x.Key,
             })
             .ToList();
     }
@@ -209,6 +221,7 @@ public class CmsBackend(
             Children = sectionItem.Children.Select(Map).ToArray(),
             HasContent = sectionItem.HasContent,
             Title = sectionItem.Title,
+            MdFile = sectionItem.MdFile,
         };
     }
 
@@ -291,11 +304,15 @@ public class CmsBackend(
         return filter.Operator switch
         {
             FilterOperator.Equals => value.Equals(filter.Value),
+            FilterOperator.NotEquals => !value.Equals(filter.Value),
             FilterOperator.More => value is IComparable comparable && comparable.CompareTo(filter.Value) > 0,
             FilterOperator.MoreOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) >= 0,
             FilterOperator.Less => value is IComparable comparable && comparable.CompareTo(filter.Value) < 0,
             FilterOperator.LessOrEqual => value is IComparable comparable && comparable.CompareTo(filter.Value) <= 0,
-            FilterOperator.In => value is IEnumerable enumerable && enumerable.Cast<object>().Contains(filter.Value),
+            FilterOperator.ValueListContain => value is IEnumerable enumerable && enumerable.Cast<object>().Contains(filter.Value),
+            FilterOperator.ValueListNotContain => value is IEnumerable enumerable && !enumerable.Cast<object>().Contains(filter.Value),
+            FilterOperator.ValueInList => filter.Value is IEnumerable enumerable && enumerable.Cast<object>().Contains(value),
+            FilterOperator.ValueNotInList => filter.Value is IEnumerable enumerable && !enumerable.Cast<object>().Contains(value),
             _ => throw new NotImplementedException()
         };
     }

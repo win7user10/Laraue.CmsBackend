@@ -158,7 +158,8 @@ public class ProcessedMdFileRegistry
                 FullPath = requestedPath.Union(nextPath).ToArray(),
                 HasContent = contentNode is not null && ((string)contentNode["content"]).Length > 0,
                 Title = title as string,
-                RelativePath = nextPath
+                RelativePath = nextPath,
+                MdFile = contentNode
             });
         } 
     }
@@ -171,6 +172,7 @@ public class ProcessedMdFileRegistry
         public required SubSectionItem[] Children { get; set; }
         public required bool HasContent { get; set; }
         public required string? Title { get; set; }
+        public required ProcessedMdFile? MdFile { get; set; }
     }
 
     private record Node
