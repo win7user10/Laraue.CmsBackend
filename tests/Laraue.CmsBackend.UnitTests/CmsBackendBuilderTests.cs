@@ -30,7 +30,7 @@ public class CmsBackendBuilderTests
         
         Assert.NotNull(article);
         
-        var tags = Assert.IsType<object[]>(article["tags"]);
+        var tags = Assert.IsType<string[]>(article["tags"]);
         var fileName = Assert.IsType<string>(article["fileName"]);
         var path = Assert.IsType<string[]>(article["path"]);
         
