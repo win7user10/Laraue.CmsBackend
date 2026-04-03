@@ -15,6 +15,7 @@ public class MarkdownProcessor : IMarkdownProcessor
     {
         var result = new ProcessedMdFileRegistry();
         var errors = new ErrorRegistry();
+        var previousByLanguage = new Dictionary<string, ProcessedMdFile>(); 
         
         foreach (var mdFile in mdFiles)
         {
@@ -67,6 +68,13 @@ public class MarkdownProcessor : IMarkdownProcessor
             }
 
             var processedFile = new ProcessedMdFile(mdFile);
+            if (previousByLanguage.TryGetValue(mdFile.LanguageCode, out var previousLanguageCode))
+            {
+                previousLanguageCode["next"] = processedFile;
+                processedFile["previous"] = previousLanguageCode;
+            }
+        
+            previousByLanguage[mdFile.LanguageCode] = processedFile;
 
             foreach (var property in processedFileProperties)
             {

@@ -23,6 +23,9 @@ public sealed class ParsedMdFile
     /// The path that matches the specified rules, 'articles'.
     /// </summary>
     public required FilePath LogicalPath { get; init; }
+
+    public ParsedMdFile? Previous { get; set; }
+    public ParsedMdFile? Next { get; set; }
 }
 
 public sealed record ParsedMdFileProperty
