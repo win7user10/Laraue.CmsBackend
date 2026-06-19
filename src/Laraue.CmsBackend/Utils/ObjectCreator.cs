@@ -29,4 +29,9 @@ public static class ObjectCreator
         
         return obj!;
     }
+    
+    public static T Initialize<T>(Dictionary<string, object> dict)
+    {
+        return (T)ObjectCreator.Initialize(dict, typeof(T));
+    }
 }

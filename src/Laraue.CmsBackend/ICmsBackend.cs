@@ -116,7 +116,7 @@ public class CmsBackend(
     {
         var entity = GetEntity(request);
         
-        return (T)ObjectCreator.Initialize(entity, typeof(T));
+        return ObjectCreator.Initialize<T>(entity);
     }
 
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
@@ -145,7 +145,7 @@ public class CmsBackend(
     {
         var entities = GetEntities(request);
 
-        var result = entities.MapTo<T, Dictionary<string, object>>(x => (T)ObjectCreator.Initialize(x, typeof(T)));
+        var result = entities.MapTo(ObjectCreator.Initialize<T>);
         
         return result;
     }
