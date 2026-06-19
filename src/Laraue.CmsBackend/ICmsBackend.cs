@@ -248,8 +248,8 @@ public class CmsBackend(
 
         var firstSorting = sorting[0];
         var orderedSource = firstSorting.SortOrder == SortOrder.Descending
-            ? source.OrderByDescending(r => r[firstSorting.Property])
-            : source.OrderBy(r => r[firstSorting.Property]);
+            ? source.OrderByDescending(r => r.GetValueOrDefault(firstSorting.Property))
+            : source.OrderBy(r => r.GetValueOrDefault(firstSorting.Property));
 
         if (sorting.Length == 1)
         {
@@ -259,8 +259,8 @@ public class CmsBackend(
         foreach (var sortRow in sorting.Skip(1))
         {
             orderedSource = sortRow.SortOrder == SortOrder.Descending
-                ? orderedSource.ThenByDescending(r => r[sortRow.Property])
-                : orderedSource.ThenBy(r => r[sortRow.Property]);
+                ? orderedSource.ThenByDescending(r => r.GetValueOrDefault(sortRow.Property))
+                : orderedSource.ThenBy(r => r.GetValueOrDefault(sortRow.Property));
         }
         
         return orderedSource;
