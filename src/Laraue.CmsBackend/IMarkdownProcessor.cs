@@ -17,7 +17,7 @@ public class MarkdownProcessor : IMarkdownProcessor
         var errors = new ErrorRegistry();
         var previousByLanguage = new Dictionary<string, ProcessedMdFile>(); 
         
-        foreach (var mdFile in mdFiles)
+        foreach (var mdFile in mdFiles.OrderBy(x => x.Properties.GetValueOrDefault("order")))
         {
             if (!typesRegistry.TryGetContentType(mdFile.ContentType, out var contentType))
             {
@@ -30,28 +30,21 @@ public class MarkdownProcessor : IMarkdownProcessor
                 .ToDictionary(x => x.Name);
 
             // keys that defined in md, but not defined in a model
-            var unknowKeys = mdFile.Properties
+            var unknownKeys = mdFile.Properties.Values
                 .Select(x => new { x.Name, x.SourceLineNumber })
                 .ExceptBy(propertyTypeByName.Keys, arg => arg.Name);
             
-            foreach (var unknowKey in unknowKeys)
-            {
+            foreach (var unknowKey in unknownKeys)
                 errors.Add(mdFile, $"Unknown key '{unknowKey.Name}'", unknowKey.SourceLineNumber);
-            }
-            
-            var mdFileProperties = mdFile.Properties
-                .ToDictionary(x => x.Name);
 
             var processedFileProperties = new List<ProcessedMdFileProperty>();
             
             foreach (var property in contentType.Properties)
             {
-                if (!mdFileProperties.TryGetValue(property.Name, out var mdFileProperty))
+                if (!mdFile.Properties.TryGetValue(property.Name, out var mdFileProperty))
                 {
                     if (property.IsRequired)
-                    {
                         errors.Add(mdFile, $"Required property '{property.Name}' is not defined", 0);
-                    }
                     
                     continue;
                 }

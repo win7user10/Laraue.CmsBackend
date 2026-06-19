@@ -16,6 +16,11 @@ public abstract class BaseContentType
     /// The file modified attribute. When filled, sitemap generator can write modification date.
     /// </summary>
     public DateTime? UpdatedAt { get; init; }
+    
+    /// <summary>
+    /// Files ordering
+    /// </summary>
+    public int? Order { get; init; }
 }
 
 [AttributeUsage(AttributeTargets.Class, Inherited = false)]

@@ -45,7 +45,7 @@ public class MarkdownParser(
                 FileName = fileName,
                 ContentType = contentType,
                 Content = content,
-                Properties = properties.Values,
+                Properties = properties,
                 PhysicalPath = contentSource.Path,
                 LogicalPath = logicalPath,
                 InnerLinks = links,
@@ -60,7 +60,7 @@ public class MarkdownParser(
 
     private static Dictionary<string, ParsedMdFileProperty> ParseProperties(MarkdownHeader[] headers)
     {
-        var result = new Dictionary<string, ParsedMdFileProperty>();
+        var result = new Dictionary<string, ParsedMdFileProperty>(StringComparer.OrdinalIgnoreCase);
         foreach (var header in headers)
         {
             var property = new ParsedMdFileProperty

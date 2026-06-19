@@ -11,7 +11,7 @@ public sealed class ParsedMdFile
     public required string LanguageCode { get; init; }
     public required string ContentType { get; init; }
     public required string Content { get; init; }
-    public required ICollection<ParsedMdFileProperty> Properties { get; init; }
+    public required Dictionary<string, ParsedMdFileProperty> Properties { get; init; }
     public required ICollection<MarkdownInnerLink> InnerLinks { get; init; }
     
     /// <summary>
@@ -23,9 +23,6 @@ public sealed class ParsedMdFile
     /// The path that matches the specified rules, 'articles'.
     /// </summary>
     public required FilePath LogicalPath { get; init; }
-
-    public ParsedMdFile? Previous { get; set; }
-    public ParsedMdFile? Next { get; set; }
 }
 
 public sealed record ParsedMdFileProperty
