@@ -17,7 +17,7 @@ public class MarkdownProcessor : IMarkdownProcessor
         var errors = new ErrorRegistry();
         var previousByLanguage = new Dictionary<string, ProcessedMdFile>(); 
         
-        foreach (var mdFile in mdFiles.OrderBy(x => x.Properties.GetValueOrDefault("order")))
+        foreach (var mdFile in mdFiles.OrderBy(x => x.Properties.GetValueOrDefault("order")?.Value))
         {
             if (!typesRegistry.TryGetContentType(mdFile.ContentType, out var contentType))
             {
