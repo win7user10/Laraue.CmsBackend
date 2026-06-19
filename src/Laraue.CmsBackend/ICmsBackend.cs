@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using Laraue.CmsBackend.Contracts;
 using Laraue.CmsBackend.Funtions;
+using Laraue.CmsBackend.Utils;
 using Laraue.Core.DataAccess.Contracts;
 using Laraue.Core.DataAccess.Extensions;
 using Laraue.Core.Exceptions.Web;
@@ -115,7 +116,7 @@ public class CmsBackend(
     {
         var entity = GetEntity(request);
         
-        return (T)GetObject(entity, typeof(T));
+        return (T)ObjectCreator.Initialize(entity, typeof(T));
     }
 
     public Dictionary<string, object> GetEntity(GetEntityRequest request)
@@ -144,7 +145,7 @@ public class CmsBackend(
     {
         var entities = GetEntities(request);
 
-        var result = entities.MapTo<T, Dictionary<string, object>>(x => (T)GetObject(x, typeof(T)));
+        var result = entities.MapTo<T, Dictionary<string, object>>(x => (T)ObjectCreator.Initialize(x, typeof(T)));
         
         return result;
     }
@@ -189,27 +190,6 @@ public class CmsBackend(
     }
 
     public CmsBackendOptions Options => options;
-
-    private static object GetObject(Dictionary<string, object> dict, Type type)
-    {
-        var obj = Activator.CreateInstance(type);
-
-        foreach (var kv in dict)
-        {
-            var prop = type.GetProperty(kv.Key, BindingFlags.IgnoreCase | BindingFlags.Public | BindingFlags.Instance);
-            if(prop == null) continue;
-
-            var value = kv.Value;
-            if (value is Dictionary<string, object> objects)
-            {
-                value = GetObject(objects, prop.PropertyType);
-            }
-
-            prop.SetValue(obj, value, null);
-        }
-        
-        return obj!;
-    }
 
     private SectionItem Map(ProcessedMdFileRegistry.SubSectionItem sectionItem)
     {
