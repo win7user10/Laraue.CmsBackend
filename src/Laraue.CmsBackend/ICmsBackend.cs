@@ -125,7 +125,7 @@ public class CmsBackend(
         
         return registry.TryGet(languageCode, request.Path, out var value)
             ? MapMdFileToDto(value, request.Properties)
-            : throw new NotFoundException();
+            : throw new NotFoundException($"Entity: {request.Path} [{request.LanguageCode}] not found.");
     }
 
     public IShortPaginatedResult<Dictionary<string, object>> GetEntities(GetEntitiesRequest request)
@@ -138,7 +138,7 @@ public class CmsBackend(
         var orderedSource = ApplySort(filteredSource, request.Sorting);
         var projectedSource = ApplyMap(orderedSource, request.Properties);
         
-        return projectedSource.ShortPaginate(request);
+        return projectedSource.ShortPaginate(request.Pagination);
     }
 
     public IShortPaginatedResult<T> GetEntities<T>(GetEntitiesRequest request) where T : class

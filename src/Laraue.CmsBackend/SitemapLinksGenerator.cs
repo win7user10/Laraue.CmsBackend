@@ -44,6 +44,7 @@ public class SitemapGenerator(ICmsBackend cmsBackend) : ISitemapGenerator
     {
         var sb = new StringBuilder();
 
+        sb.Append("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
         sb.Append("<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">");
         
         foreach (var item in items)
